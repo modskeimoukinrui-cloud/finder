@@ -1184,75 +1184,19 @@
 
 
   /* ========== MAP VIEW ========== */
-  .view-tabs {
-    display: flex;
-    background: var(--surface);
-    border-bottom: 1.5px solid var(--border);
-  }
-  .view-tab {
-    flex: 1;
-    text-align: center;
-    padding: 10px 0;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    cursor: pointer;
-    border: none;
-    background: none;
-    transition: color 0.15s;
-  }
-  .view-tab.active {
-    color: var(--accent);
-    border-bottom: 2.5px solid var(--accent);
-  }
-  #map-screen {
-    display: none;
-    flex-direction: column;
-    height: calc(100vh - 56px);
-    position: relative;
-  }
-  #map-screen.visible { display: flex; }
-  #leaflet-map {
-    flex: 1;
-    width: 100%;
-    z-index: 1;
-  }
-  .map-count-badge {
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255,255,255,0.95);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 4px 14px;
-    font-size: 12px;
-    color: var(--text-secondary);
-    z-index: 1000;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-  .map-popup-name {
-    font-size: 13px;
-    font-weight: 700;
-    color: #1A1815;
-    margin-bottom: 2px;
-  }
-  .map-popup-type {
-    font-size: 11px;
-    color: #6B6660;
-    margin-bottom: 4px;
-  }
-  .map-popup-link {
-    font-size: 12px;
-    color: #2D6A4F;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-  }
-  .leaflet-popup-content { margin: 8px 12px; min-width: 140px; }
-  .list-screen { display: flex; flex-direction: column; }
-  .list-screen.hidden { display: none; }
+  .view-tabs { display:flex; background:var(--surface); border-bottom:1.5px solid var(--border); }
+  .view-tab { flex:1; text-align:center; padding:10px 0; font-size:13px; font-weight:500; color:var(--text-secondary); cursor:pointer; border:none; background:none; }
+  .view-tab.active { color:var(--accent); border-bottom:2.5px solid var(--accent); }
+  #map-screen { display:none; flex-direction:column; height:calc(100vh - 56px); position:relative; }
+  #map-screen.visible { display:flex; }
+  #leaflet-map { flex:1; width:100%; z-index:1; }
+  .map-count-badge { position:absolute; top:8px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.95); border:1px solid var(--border); border-radius:20px; padding:4px 14px; font-size:12px; color:var(--text-secondary); z-index:1000; pointer-events:none; white-space:nowrap; }
+  .map-popup-name { font-size:13px; font-weight:700; color:#1A1815; margin-bottom:2px; }
+  .map-popup-type { font-size:11px; color:#6B6660; margin-bottom:2px; }
+  .map-popup-link { font-size:12px; color:#2D6A4F; font-weight:600; cursor:pointer; }
+  .leaflet-popup-content { margin:8px 12px; min-width:140px; }
+  .list-screen { display:flex; flex-direction:column; }
+  .list-screen.hidden { display:none; }
 
 </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
@@ -1463,7 +1407,7 @@
   </div><!-- /list-screen -->
 
   <div id="map-screen">
-    <div class="map-count-badge" id="map-count-badge">578件表示中</div>
+    <div class="map-count-badge" id="map-count-badge">---件表示中</div>
     <div id="leaflet-map"></div>
   </div>
 </div>
@@ -1578,7 +1522,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612104",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0002",
@@ -1612,7 +1559,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614114",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0003",
@@ -1646,7 +1596,10 @@ const FACILITIES = [
     "lastUpdated": "2026-05-27",
     "lastUpdater": "",
     "inheritNote": "2026.1月確認。吸引は半日に1回まで、ないにこしたことはない。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600846",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0004",
@@ -1680,7 +1633,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620961",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0005",
@@ -1721,7 +1677,10 @@ const FACILITIES = [
         "text": "2025.4．10TELにて確認。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8620915",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0006",
@@ -1755,7 +1714,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620962",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0007",
@@ -1789,7 +1751,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620914",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0008",
@@ -1823,7 +1788,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618028",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0009",
@@ -1857,7 +1825,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620947",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0010",
@@ -1891,7 +1862,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618042",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0011",
@@ -1932,7 +1906,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8600832",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0012",
@@ -1966,7 +1943,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620976",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0013",
@@ -2007,7 +1987,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8620949",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0014",
@@ -2041,7 +2024,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620925",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0015",
@@ -2075,7 +2061,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600048",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0016",
@@ -2109,7 +2098,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614173",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0017",
@@ -2143,7 +2135,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614153",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0018",
@@ -2177,7 +2172,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614147",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0019",
@@ -2211,7 +2209,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614172",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0020",
@@ -2245,7 +2246,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0021",
@@ -2279,7 +2283,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600862",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0022",
@@ -2313,7 +2320,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618083",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0023",
@@ -2347,7 +2357,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615280",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0024",
@@ -2381,7 +2394,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600862",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0025",
@@ -2415,7 +2431,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615512",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0026",
@@ -2456,7 +2475,10 @@ const FACILITIES = [
         "text": "2025/9/30FAXが届く。導尿、褥瘡は△。トイレ、洗面所、冷暖房、収納家具完備。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8600047",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0027",
@@ -2497,7 +2519,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。 看護師が日勤帯しかいないため、日勤時間帯での胃瘻投与であれば検討可能。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8620862",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0028",
@@ -2531,7 +2556,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614237",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0029",
@@ -2565,7 +2593,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610117",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0030",
@@ -2599,7 +2630,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600832",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0031",
@@ -2640,7 +2674,10 @@ const FACILITIES = [
         "text": "2025/8/29生活相談員猪上（ｲﾉｳｴ）氏挨拶に来られる。全室個室。浴室、ミニキッチン付。ホーム内明るい印象。物品の購入をスタッフが行うなど手厚く対応してもらえる。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8618081",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0032",
@@ -2674,7 +2711,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614146",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0033",
@@ -2708,7 +2748,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600821",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0034",
@@ -2742,7 +2785,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620959",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0035",
@@ -2776,7 +2822,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614211",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0036",
@@ -2810,7 +2859,10 @@ const FACILITIES = [
     "lastUpdated": "2026-01-16",
     "lastUpdater": "",
     "inheritNote": "2026.1.15連携室嶋田氏来苑。介護士24時間勤務。看護師は日中常駐。身よりがない方、特養待機も相談可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610135",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0037",
@@ -2844,7 +2896,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614113",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0038",
@@ -2878,7 +2933,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615253",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0039",
@@ -2912,7 +2970,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-21",
     "lastUpdater": "",
     "inheritNote": "南館（1039番地）と本館（1023-1）あり。2025.11.12苑長補佐植村さん来院。空1室あり。看取り、認知症、褥瘡対応可。要支援1～可。入居後自立になっても入居継続可。訪問看護ステーション併設。特別指示書で訪看介入可。看取りの対応もしており、年間10-20名程。\n協力医療機関はそのだ脳神経外科・消化器内科。往診あり。その他医療機関への受診は自由に可能。\n空床利用してのショートステイも実施している。\n2026.4.21本館、南館とも空きあり",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620946",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0040",
@@ -2946,7 +3007,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618006",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0041",
@@ -2987,7 +3051,10 @@ const FACILITIES = [
         "text": "2025.10.16情報FAXあり。空室４。 褥瘡処置・ストーマ処置の衛生材料費は個人負担。インスリンは毎食前後対応可能（家族同意書要）。在宅酸素機器は医療保険適応で自己負担。介護職は24時間常駐。看護職員は日中常駐、18：00～オンコール。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8620912",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0042",
@@ -3021,7 +3088,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600072",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0043",
@@ -3055,7 +3125,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600811",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0044",
@@ -3089,7 +3162,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600071",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0045",
@@ -3130,7 +3206,10 @@ const FACILITIES = [
         "text": "2025/9/30FAXが届く。買い物代行。福祉用具無償貸与。収納完備。Wi-Fi完備。毎日レクリエーション。医療機関への送迎。洗濯サービス。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8615253",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0046",
@@ -3171,7 +3250,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8620950",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0047",
@@ -3205,7 +3287,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614214",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0048",
@@ -3239,7 +3324,10 @@ const FACILITIES = [
     "lastUpdated": "2026-02-02",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614172",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0049",
@@ -3273,7 +3361,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618028",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0050",
@@ -3307,7 +3398,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618035",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0051",
@@ -3341,7 +3435,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610165",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0052",
@@ -3375,7 +3472,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614172",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0053",
@@ -3409,7 +3509,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614109",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0054",
@@ -3450,7 +3553,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。関連施設でも受入可能",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8620962",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0055",
@@ -3484,7 +3590,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-15",
     "lastUpdater": "",
     "inheritNote": "入居時必要物品あり。家具類・携帯電話・TV・衣類・排泄用品・寝具類など準備必要。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614152",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0056",
@@ -3518,7 +3627,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-15",
     "lastUpdater": "",
     "inheritNote": "入居時必要物品あり。家具類・携帯電話・TV・衣類・排泄用品・寝具類など準備必要。",
-    "timeline": []
+    "timeline": [],
+    "zip": "861－5513",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0057",
@@ -3552,7 +3664,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-15",
     "lastUpdater": "",
     "inheritNote": "入居時必要物品あり。家具類・携帯電話・TV・衣類・排泄用品・寝具類など準備必要。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618010",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0058",
@@ -3586,7 +3701,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-15",
     "lastUpdater": "",
     "inheritNote": "入居時必要物品あり。家具類・携帯電話・TV・衣類・排泄用品・寝具類など準備必要。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0059",
@@ -3620,7 +3738,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618002",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0060",
@@ -3654,7 +3775,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614172",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0061",
@@ -3688,7 +3812,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0062",
@@ -3729,7 +3856,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8620942",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0063",
@@ -3763,7 +3893,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614237",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0064",
@@ -3797,7 +3930,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620924",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0065",
@@ -3831,7 +3967,10 @@ const FACILITIES = [
     "lastUpdated": "2026-01-16",
     "lastUpdater": "",
     "inheritNote": "2026.1.15連携室嶋田氏来苑。介護士24時間勤務。看護師は日中常駐。身よりがない方、特養待機も相談可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620926",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0066",
@@ -3865,7 +4004,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "862－0976",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0067",
@@ -3899,7 +4041,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615512",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0068",
@@ -3933,7 +4078,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614204",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0069",
@@ -3967,7 +4115,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620924",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0070",
@@ -4001,7 +4152,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614214",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0071",
@@ -4035,7 +4189,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600059",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0072",
@@ -4076,7 +4233,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認。 要支援受入可。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8618006",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0073",
@@ -4110,7 +4270,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600068",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0074",
@@ -4144,7 +4307,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614106",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0075",
@@ -4178,7 +4344,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620913",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0076",
@@ -4212,7 +4381,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615343",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0077",
@@ -4246,7 +4418,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615514",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0078",
@@ -4280,7 +4455,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615515",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0079",
@@ -4314,7 +4492,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615283",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0080",
@@ -4348,7 +4529,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620970",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0081",
@@ -4382,7 +4566,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600852",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0082",
@@ -4416,7 +4603,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614214",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0083",
@@ -4450,7 +4640,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-15",
     "lastUpdater": "",
     "inheritNote": "入居時必要物品あり。家具類・携帯電話・TV・衣類・排泄用品・寝具類など準備必要。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610141",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0084",
@@ -4484,7 +4677,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0085",
@@ -4518,7 +4714,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615271",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0086",
@@ -4552,7 +4751,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614211",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0087",
@@ -4593,7 +4795,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。訪問看護・訪問介護・訪問リハビリが併設している。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8615514",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0088",
@@ -4627,7 +4832,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614142",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0089",
@@ -4661,7 +4869,10 @@ const FACILITIES = [
     "lastUpdated": "2026-01-16",
     "lastUpdater": "",
     "inheritNote": "2026.1.15連携室嶋田氏来苑。介護士24時間勤務。看護師は日中常駐。身よりがない方、特養待機も相談可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600055",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0090",
@@ -4695,7 +4906,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620911",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0091",
@@ -4729,7 +4943,10 @@ const FACILITIES = [
     "lastUpdated": "2026-01-14",
     "lastUpdater": "",
     "inheritNote": "2026.1.14安藤主任来苑。情報提供あり。系列のナーシングホームたいじゅとも連携し、必要な場合は施設間の移動検討可能。訪問看護ステーションの併設があるが、施設にも看護師が常駐している。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615515",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0092",
@@ -4763,7 +4980,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614206",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0093",
@@ -4797,7 +5017,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600048",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0094",
@@ -4831,7 +5054,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620924",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0095",
@@ -4865,7 +5091,10 @@ const FACILITIES = [
     "lastUpdated": "2026-02-04",
     "lastUpdater": "",
     "inheritNote": "2026.2.4FAXあり。医師・歯科医師による訪問診療。看護師・薬剤師常時対応。夜勤2名体制。調理師による手作り食事。訪問介護・通所介護併設。生活保護受け入れあるが、人数制限あり。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618034",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0096",
@@ -4899,7 +5128,10 @@ const FACILITIES = [
     "lastUpdated": "2026-01-16",
     "lastUpdater": "",
     "inheritNote": "2026.1.15連携室嶋田氏来苑。介護士24時間勤務。看護師は日中常駐。身よりがない方、特養待機も相談可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620922",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0097",
@@ -4933,7 +5165,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615516",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0098",
@@ -4967,7 +5202,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615253",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0099",
@@ -5008,7 +5246,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。2025/9/9FAXにて5室空きあり。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8618039",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0100",
@@ -5049,7 +5290,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。関連施設でも受入可能",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8620961",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0101",
@@ -5083,7 +5327,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618001",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0102",
@@ -5117,7 +5364,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618038",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0103",
@@ -5151,7 +5401,10 @@ const FACILITIES = [
     "lastUpdated": "2026-05-28",
     "lastUpdater": "",
     "inheritNote": "2026.5.23で閉鎖。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600085",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0104",
@@ -5185,7 +5438,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600051",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0105",
@@ -5219,7 +5475,10 @@ const FACILITIES = [
     "lastUpdated": "2025-11-26",
     "lastUpdater": "",
     "inheritNote": "（2025/11/26）施設長本田様より確認。夫婦部屋空きあり。要支援対応可。くまもと成城病院入院中の入居費用がかからない。くまもと成城病院外来受診は無料送迎あり。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618072",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0106",
@@ -5253,7 +5512,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615515",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0107",
@@ -5287,7 +5549,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614206",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0108",
@@ -5321,7 +5586,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614207",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0109",
@@ -5362,7 +5630,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。関連施設でも受入可能",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8620969",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0110",
@@ -5396,7 +5667,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614151",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0111",
@@ -5430,7 +5704,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614172",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0112",
@@ -5471,7 +5748,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8618064",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0113",
@@ -5505,7 +5785,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618037",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0114",
@@ -5539,7 +5822,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618037",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0115",
@@ -5573,7 +5859,10 @@ const FACILITIES = [
     "lastUpdated": "2026-05-27",
     "lastUpdater": "",
     "inheritNote": "2026.1月確認。吸引頻度に制限はなし。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618003",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0116",
@@ -5607,7 +5896,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-30",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0117",
@@ -5641,7 +5933,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618038",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0118",
@@ -5675,7 +5970,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600063",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0119",
@@ -5709,7 +6007,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600053",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0120",
@@ -5743,7 +6044,10 @@ const FACILITIES = [
     "lastUpdated": "2026-03-24",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618007",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0121",
@@ -5784,7 +6088,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8620962",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0122",
@@ -5818,7 +6125,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618005",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0123",
@@ -5852,7 +6162,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618005",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0124",
@@ -5886,7 +6199,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618039",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0125",
@@ -5920,7 +6236,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618038",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0126",
@@ -5954,7 +6273,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618039",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0127",
@@ -5988,7 +6310,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0128",
@@ -6022,7 +6347,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600821",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0129",
@@ -6056,7 +6384,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614142",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0130",
@@ -6090,7 +6421,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "861－5346",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0131",
@@ -6124,7 +6458,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618072",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0132",
@@ -6158,7 +6495,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615255",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0133",
@@ -6192,7 +6532,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620942",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0134",
@@ -6226,7 +6569,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618003",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0135",
@@ -6260,7 +6606,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614204",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0136",
@@ -6294,7 +6643,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620946",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0137",
@@ -6328,7 +6680,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-17",
     "lastUpdater": "",
     "inheritNote": "2026.4.17営業あり。自社厨房。完全無農薬米提供中。デイサービス併設。国道3号線沿い。近隣に病院が多い。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614106",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0138",
@@ -6369,7 +6724,10 @@ const FACILITIES = [
         "text": "居室に以下の備品設置あり。電動ベッド、トイレ、洗面台、テレビ、ケアコール、エアコン、タンス、寝具。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8614161",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0139",
@@ -6410,7 +6768,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8600856",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0140",
@@ -6444,7 +6805,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618038",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0141",
@@ -6478,7 +6842,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615512",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0142",
@@ -6512,7 +6879,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-15",
     "lastUpdater": "",
     "inheritNote": "2026.4.15挨拶来苑。\n吸引・点滴・麻薬・各種ドレーン24時間対応。インスリンスケール可。人工透析受け入れ不可。身体拘束は要相談。悪性腫瘍や指定難病の受け入れ可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614171",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0143",
@@ -6553,7 +6923,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。 看護師が常駐しているが、訪問看護を週１回調整が必要。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8600088",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0144",
@@ -6587,7 +6960,10 @@ const FACILITIES = [
     "lastUpdated": "2026-01-16",
     "lastUpdater": "",
     "inheritNote": "2026.1.15連携室嶋田氏来苑。介護士24時間勤務。看護師は日中常駐。身よりがない方、特養待機も相談可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620949",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0145",
@@ -6621,7 +6997,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614103",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0146",
@@ -6662,7 +7041,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8618035",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0147",
@@ -6696,7 +7078,10 @@ const FACILITIES = [
     "lastUpdated": "2026-02-10",
     "lastUpdater": "",
     "inheritNote": "2026.2.9FAXにて情報提供あり。\nインスリンは血糖測定も可能。喀痰吸引24時間対応可能。医療用麻薬は持続皮下注・静注であれば相談可能。理学療法士による専門的な訪問リハビリの利用が可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615515",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0148",
@@ -6730,7 +7115,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620922",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0149",
@@ -6764,7 +7152,10 @@ const FACILITIES = [
     "lastUpdated": "2025-11-21",
     "lastUpdater": "",
     "inheritNote": "2025.11.20FAXにて情報確認。法人内の「くまもと在宅支援病院」が隣接し、安心の医療サポートあり。桜十字グループ事業所と連携し一体型のサービス提供をしている。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620922",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0150",
@@ -6798,7 +7189,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618038",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0151",
@@ -6832,7 +7226,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618035",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0152",
@@ -6866,7 +7263,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614109",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0153",
@@ -6900,7 +7300,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620942",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0154",
@@ -6934,7 +7337,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600046",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0155",
@@ -6968,7 +7374,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620903",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0156",
@@ -7002,7 +7411,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600068",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0157",
@@ -7036,7 +7448,10 @@ const FACILITIES = [
     "lastUpdated": "2026-02-02",
     "lastUpdater": "",
     "inheritNote": "2025.1.23TELにて確認。吸引頻度は1日3回まで。施設内リハビリは週3回。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618001",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0158",
@@ -7070,7 +7485,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614133",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0159",
@@ -7104,7 +7522,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614234",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0160",
@@ -7138,7 +7559,10 @@ const FACILITIES = [
     "lastUpdated": "2026-05-29",
     "lastUpdater": "",
     "inheritNote": "2026.4.21営業あり。ストーマ、ペースメーカー、リウマチ、心疾患、嚥下食、認知症、精神疾患、末期がん、パーキンソン病も対応可。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0161",
@@ -7172,7 +7596,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615287",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0162",
@@ -7206,7 +7633,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-15",
     "lastUpdater": "",
     "inheritNote": "2026.4.15挨拶来苑。吸引・点滴・麻薬・各種ドレーン24時間対応。インスリンスケール可。人工透析受け入れ不可。身体拘束は要相談。悪性腫瘍や指定難病の受け入れ可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615287",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0163",
@@ -7240,7 +7670,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614225",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0164",
@@ -7274,7 +7707,10 @@ const FACILITIES = [
     "lastUpdated": "2026-06-01",
     "lastUpdater": "",
     "inheritNote": "2026.5.13電話にて確認。居室内にトイレあり。1階フロアのみリビングスペースあり。2026.6.1電話にて確認。生活保護は要介護3以上の方or要介護3以上になりそうな方であれば可能。人工呼吸器の方も対応は可能だが、訪問診療の医師へ在宅用呼吸器の使用指示を出してもらう必要があり、難病等なければ自費レンタルの場合あり。透析の方も受け入れ可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600072",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0165",
@@ -7308,7 +7744,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618038",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0166",
@@ -7349,7 +7788,10 @@ const FACILITIES = [
         "text": "2025/9/30FAXが届く。認知症（中等度）脊髄小脳変性症、末期癌、ALS、パーキンソン病、多発性硬化症、重症筋無力症対応。2025/9/25現在、空室39室。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8615514",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0167",
@@ -7383,7 +7825,10 @@ const FACILITIES = [
     "lastUpdated": "2026-05-20",
     "lastUpdater": "",
     "inheritNote": "2026.5.12メールにて情報提供あり。20室空きあり。訪問看護別表7・8の方も入居可能。痰吸引・経管栄養の受け入れ可能。\n生活保護については要介護4以上で要相談。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620962",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0168",
@@ -7417,7 +7862,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618044",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0169",
@@ -7451,7 +7899,10 @@ const FACILITIES = [
     "lastUpdated": "2026-05-27",
     "lastUpdater": "",
     "inheritNote": "2026.1.27面会にて確認。施設内にＰＴ在籍。訪問リハビリの利用も可能。吸引頻度は2時間に1回まで。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620959",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0170",
@@ -7485,7 +7936,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620926",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0172",
@@ -7519,7 +7973,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690416",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0173",
@@ -7553,7 +8010,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614403",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0174",
@@ -7587,7 +8047,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690562",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0175",
@@ -7621,7 +8084,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690425",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0176",
@@ -7655,7 +8121,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690425",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0177",
@@ -7689,7 +8158,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8693472",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0178",
@@ -7723,7 +8195,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690433",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0179",
@@ -7757,7 +8232,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690534",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0180",
@@ -7791,7 +8269,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690533",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0181",
@@ -7825,7 +8306,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690605",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0182",
@@ -7859,7 +8343,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690425",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0183",
@@ -7893,7 +8380,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690406",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0184",
@@ -7927,7 +8417,10 @@ const FACILITIES = [
     "lastUpdated": "2026-01-16",
     "lastUpdater": "",
     "inheritNote": "2026.1.15連携室嶋田氏来苑。介護士24時間勤務。看護師は日中常駐。身よりがない方、特養待機も相談可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690532",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0185",
@@ -7961,7 +8454,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690562",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0186",
@@ -7995,7 +8491,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690551",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0187",
@@ -8029,7 +8528,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690633",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0188",
@@ -8063,7 +8565,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8693205",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0189",
@@ -8097,7 +8602,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690631",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0190",
@@ -8131,7 +8639,10 @@ const FACILITIES = [
     "lastUpdated": "2026-01-16",
     "lastUpdater": "",
     "inheritNote": "2026.1.15連携室嶋田氏来苑。介護士24時間勤務。看護師は日中常駐。身よりがない方、特養待機も相談可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690532",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0191",
@@ -8165,7 +8676,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690541",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0192",
@@ -8199,7 +8713,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690534",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0193",
@@ -8233,7 +8750,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614407",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0194",
@@ -8267,7 +8787,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614721",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0195",
@@ -8301,7 +8824,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690633",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0196",
@@ -8335,7 +8861,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690503",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0197",
@@ -8369,7 +8898,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690543",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0198",
@@ -8403,7 +8935,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690551",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0199",
@@ -8437,7 +8972,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690622",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0200",
@@ -8471,7 +9009,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614714",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0201",
@@ -8505,7 +9046,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690631",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0202",
@@ -8539,7 +9083,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690404",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0203",
@@ -8573,7 +9120,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690532",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0204",
@@ -8607,7 +9157,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690405",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0205",
@@ -8641,7 +9194,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690524",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0206",
@@ -8675,7 +9231,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8693205",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0207",
@@ -8709,7 +9268,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690425",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0208",
@@ -8743,7 +9305,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690410",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0209",
@@ -8777,7 +9342,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690542",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0210",
@@ -8811,7 +9379,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690533",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0211",
@@ -8845,7 +9416,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690513",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0212",
@@ -8879,7 +9453,10 @@ const FACILITIES = [
     "lastUpdated": "2025-12-26",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690511",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0213",
@@ -8913,7 +9490,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690543",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0214",
@@ -8947,7 +9527,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8693472",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0215",
@@ -8981,7 +9564,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690543",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0216",
@@ -9015,7 +9601,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690623",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0217",
@@ -9049,7 +9638,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690412",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0218",
@@ -9083,7 +9675,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690606",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0219",
@@ -9117,7 +9712,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690622",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0220",
@@ -9151,7 +9749,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690424",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0221",
@@ -9185,7 +9786,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690511",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0222",
@@ -9219,7 +9823,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614711",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0223",
@@ -9253,7 +9860,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690533",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0224",
@@ -9287,7 +9897,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0225",
@@ -9321,7 +9934,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690201",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0226",
@@ -9355,7 +9971,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690303",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0227",
@@ -9389,7 +10008,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650016",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0228",
@@ -9423,7 +10045,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640011",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0229",
@@ -9457,7 +10082,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690221",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0230",
@@ -9491,7 +10119,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0231",
@@ -9525,7 +10156,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690202",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0232",
@@ -9559,7 +10193,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650016",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0233",
@@ -9593,7 +10230,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610812",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0234",
@@ -9627,7 +10267,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0235",
@@ -9661,7 +10304,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690211",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0236",
@@ -9695,7 +10341,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0237",
@@ -9729,7 +10378,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650058",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0238",
@@ -9763,7 +10415,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650103",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0239",
@@ -9797,7 +10452,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690203",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0240",
@@ -9831,7 +10489,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650016",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0241",
@@ -9865,7 +10526,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0242",
@@ -9899,7 +10563,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640052",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0243",
@@ -9933,7 +10600,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690123",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0244",
@@ -9967,7 +10637,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640161",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0245",
@@ -10001,7 +10674,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650123",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0246",
@@ -10035,7 +10711,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650056",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0247",
@@ -10069,7 +10748,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640012",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0248",
@@ -10103,7 +10785,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650064",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0249",
@@ -10137,7 +10822,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690203",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0250",
@@ -10171,7 +10859,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610803",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0251",
@@ -10205,7 +10896,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0252",
@@ -10239,7 +10933,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650125",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0253",
@@ -10273,7 +10970,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640053",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0254",
@@ -10307,7 +11007,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690222",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0255",
@@ -10341,7 +11044,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-22",
     "lastUpdater": "",
     "inheritNote": "身寄りなしの方も相談可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615401",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0256",
@@ -10375,7 +11081,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610913",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0257",
@@ -10409,7 +11118,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650001",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0258",
@@ -10443,7 +11155,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650016",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0259",
@@ -10477,7 +11192,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640025",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0260",
@@ -10511,7 +11229,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640161",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0261",
@@ -10545,7 +11266,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650016",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0262",
@@ -10579,7 +11303,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650132",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0263",
@@ -10613,7 +11340,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640003",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0264",
@@ -10647,7 +11377,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0265",
@@ -10681,7 +11414,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690302",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0266",
@@ -10715,7 +11451,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640052",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0267",
@@ -10749,7 +11488,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0268",
@@ -10783,7 +11525,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640012",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0269",
@@ -10817,7 +11562,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0270",
@@ -10851,7 +11599,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-22",
     "lastUpdater": "",
     "inheritNote": "2026.4.21営業あり。身寄りのない方も対応可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615401",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0271",
@@ -10892,7 +11643,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認。 山鹿市在住であれば要支援受入可能。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8650025",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0272",
@@ -10926,7 +11680,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-22",
     "lastUpdater": "",
     "inheritNote": "2026.4.21営業あり。身寄りのない方も対応可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650025",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0273",
@@ -10960,7 +11717,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610302",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0274",
@@ -10994,7 +11754,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610406",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0275",
@@ -11028,7 +11791,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610331",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0276",
@@ -11062,7 +11828,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610561",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0277",
@@ -11096,7 +11865,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610382",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0278",
@@ -11130,7 +11902,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610382",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0279",
@@ -11164,7 +11939,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610501",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0280",
@@ -11205,7 +11983,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認。 要支援受入可。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8610533",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0281",
@@ -11239,7 +12020,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610521",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0282",
@@ -11273,7 +12057,10 @@ const FACILITIES = [
     "lastUpdated": "2025-12-16",
     "lastUpdater": "",
     "inheritNote": "2025/12/15施設長永石様来院あり。10名程空床あり。経鼻経管栄養以外の医療ケア対応可（Nsは日中のみの滞在）。認知症ケアも得意としている。近隣に菊陽病院、菊池病院、弓削病院あり精神科と連携し内服調整など対応している。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691102",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0283",
@@ -11307,7 +12094,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691102",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0284",
@@ -11348,7 +12138,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認。 要支援受入可能。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8611140",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0285",
@@ -11382,7 +12175,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691107",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0286",
@@ -11416,7 +12212,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691235",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0287",
@@ -11457,7 +12256,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認。 要支援受入可能。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8691235",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0288",
@@ -11491,7 +12293,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691226",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0289",
@@ -11525,7 +12330,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0290",
@@ -11559,7 +12367,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611112",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0291",
@@ -11593,7 +12404,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611212",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0292",
@@ -11634,7 +12448,10 @@ const FACILITIES = [
         "text": "2025.8.22TELにて確認。要支援受入可能。往診あり（川口病院：初回は外来受診必要。）有料でスタッフが受診同行も可能。居室は6.5畳～７畳。寝具は持参必要。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8611324",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0293",
@@ -11668,7 +12485,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611351",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0294",
@@ -11709,7 +12529,10 @@ const FACILITIES = [
         "text": "2025.8.22TELにて確認。菊池市在住であれば要支援入所検討可能（人数制限あり）市外は受入不可。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8611313",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0295",
@@ -11750,7 +12573,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認。 要支援受入可。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8611331",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0296",
@@ -11784,7 +12610,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611103",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0297",
@@ -11818,7 +12647,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611204",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0298",
@@ -11852,7 +12684,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611331",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0299",
@@ -11886,7 +12721,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611323",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0300",
@@ -11920,7 +12758,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0301",
@@ -11954,7 +12795,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611341",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0302",
@@ -11988,7 +12832,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691205",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0303",
@@ -12022,7 +12869,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691108",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0304",
@@ -12056,7 +12906,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0305",
@@ -12097,7 +12950,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認。 要支援受入可能。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8611323",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0306",
@@ -12131,7 +12987,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611341",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0307",
@@ -12165,7 +13024,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0308",
@@ -12199,7 +13061,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611115",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0309",
@@ -12233,7 +13098,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691235",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0310",
@@ -12267,7 +13135,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611323",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0311",
@@ -12308,7 +13179,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認 要支援受入可能。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8611115",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0312",
@@ -12349,7 +13223,10 @@ const FACILITIES = [
         "text": "2025.8.22TELにて確認。 要支援受入可能だが、住所地が菊池市・菊池郡・合志市・大津に限る。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8611201",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0313",
@@ -12390,7 +13267,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認。 要支援受入可。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8611304",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0314",
@@ -12424,7 +13304,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611331",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0315",
@@ -12458,7 +13341,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "861－1204",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0316",
@@ -12492,7 +13378,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691236",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0317",
@@ -12526,7 +13415,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691227",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0318",
@@ -12560,7 +13452,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611115",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0319",
@@ -12594,7 +13489,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0320",
@@ -12628,7 +13526,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611102",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0321",
@@ -12662,7 +13563,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691102",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0322",
@@ -12703,7 +13607,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認。 要支援受入可能。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8611116",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0323",
@@ -12737,7 +13644,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691113",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0324",
@@ -12771,7 +13681,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691221",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0325",
@@ -12805,7 +13718,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611104",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0326",
@@ -12839,7 +13755,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691113",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0327",
@@ -12873,7 +13792,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691225",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0328",
@@ -12907,7 +13829,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691235",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0329",
@@ -12941,7 +13866,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691102",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0330",
@@ -12975,7 +13903,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-15",
     "lastUpdater": "",
     "inheritNote": "2026.4.15挨拶来苑。\n吸引・点滴・麻薬・各種ドレーン24時間対応。インスリンスケール可。人工透析受け入れ不可。身体拘束は要相談。悪性腫瘍や指定難病の受け入れ可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691233",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0331",
@@ -13009,7 +13940,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612403",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0332",
@@ -13043,7 +13977,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8692700",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0333",
@@ -13077,7 +14014,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691504",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0334",
@@ -13111,7 +14051,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691412",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0335",
@@ -13145,7 +14088,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8692612",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0336",
@@ -13179,7 +14125,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691602",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0337",
@@ -13213,7 +14162,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8692505",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0338",
@@ -13247,7 +14199,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8692504",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0339",
@@ -13281,7 +14236,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612403",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0340",
@@ -13315,7 +14273,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8692301",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0341",
@@ -13349,7 +14310,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8692612",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0342",
@@ -13383,7 +14347,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691404",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0343",
@@ -13417,7 +14384,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8692501",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0344",
@@ -13451,7 +14421,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612403",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0345",
@@ -13485,7 +14458,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613205",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0346",
@@ -13519,7 +14495,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613207",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0347",
@@ -13553,7 +14532,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613103",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0348",
@@ -13587,7 +14569,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613205",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0349",
@@ -13628,7 +14613,10 @@ const FACILITIES = [
         "text": "2025/8/26入所相談担当者赤石氏より挨拶、空室あり。身寄りのない方も対応可能。TV、エアコン等完備。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8613512",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0350",
@@ -13662,7 +14650,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613106",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0351",
@@ -13696,7 +14687,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612241",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0352",
@@ -13730,7 +14724,10 @@ const FACILITIES = [
     "lastUpdated": "2025-12-16",
     "lastUpdater": "",
     "inheritNote": "2025.12.16赤石相談員来苑。\nTEL：080-8563-3802\n24時間職員常駐（看護師とは限らない）\n身寄りのない方（保証人なしでも可）、特養待機の入所可能。TVやエアコン、布団・寝具類など装備品あり。身軽に入所可能\nデイサービス併設あり。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612233",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0353",
@@ -13764,7 +14761,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613107",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0354",
@@ -13798,7 +14798,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613243",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0355",
@@ -13832,7 +14835,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613913",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0356",
@@ -13866,7 +14872,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613244",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0357",
@@ -13900,7 +14909,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612234",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0358",
@@ -13934,7 +14946,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613564",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0359",
@@ -13968,7 +14983,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612232",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0360",
@@ -14002,7 +15020,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613455",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0361",
@@ -14036,7 +15057,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612211",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0362",
@@ -14070,7 +15094,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0363",
@@ -14104,7 +15131,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613205",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0364",
@@ -14138,7 +15168,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612234",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0365",
@@ -14172,7 +15205,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614621",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0366",
@@ -14206,7 +15242,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612236",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0367",
@@ -14240,7 +15279,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612236",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0368",
@@ -14274,7 +15316,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613205",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0369",
@@ -14308,7 +15353,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613201",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0370",
@@ -14342,7 +15390,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660021",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0371",
@@ -14376,7 +15427,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660865",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0372",
@@ -14410,7 +15464,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660072",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0373",
@@ -14444,7 +15501,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8695151",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0374",
@@ -14478,7 +15538,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694703",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0375",
@@ -14512,7 +15575,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660831",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0376",
@@ -14546,7 +15612,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660856",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0377",
@@ -14580,7 +15649,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8695164",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0378",
@@ -14614,7 +15686,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660827",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0379",
@@ -14648,7 +15723,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660063",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0380",
@@ -14682,7 +15760,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660065",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0381",
@@ -14716,7 +15797,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660021",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0382",
@@ -14750,7 +15834,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694701",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0383",
@@ -14784,7 +15871,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660024",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0384",
@@ -14818,7 +15908,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694701",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0385",
@@ -14852,7 +15945,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660872",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0386",
@@ -14886,7 +15982,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660814",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0387",
@@ -14920,7 +16019,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694222",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0388",
@@ -14954,7 +16056,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694815",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0389",
@@ -14988,7 +16093,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660011",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0390",
@@ -15022,7 +16130,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690402",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0391",
@@ -15056,7 +16167,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660015",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0392",
@@ -15090,7 +16204,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660012",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0393",
@@ -15124,7 +16241,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694203",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0394",
@@ -15158,7 +16278,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660833",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0395",
@@ -15192,7 +16315,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660892",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0396",
@@ -15226,7 +16352,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694203",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0397",
@@ -15260,7 +16389,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8695164",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0398",
@@ -15294,7 +16426,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694704",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0399",
@@ -15328,7 +16463,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694301",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0400",
@@ -15362,7 +16500,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8695155",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0401",
@@ -15396,7 +16537,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694615",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0402",
@@ -15430,7 +16574,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660021",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0403",
@@ -15464,7 +16611,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660065",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0404",
@@ -15498,7 +16648,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694704",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0405",
@@ -15532,7 +16685,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660811",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0406",
@@ -15566,7 +16722,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660898",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0407",
@@ -15600,7 +16759,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660898",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0408",
@@ -15634,7 +16796,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660891",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0409",
@@ -15668,7 +16833,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694403",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0410",
@@ -15702,7 +16870,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694805",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0411",
@@ -15736,7 +16907,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694703",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0412",
@@ -15770,7 +16944,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660061",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0413",
@@ -15804,7 +16981,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660033",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0414",
@@ -15838,7 +17018,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660813",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0415",
@@ -15872,7 +17055,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660072",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0416",
@@ -15906,7 +17092,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660065",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0417",
@@ -15940,7 +17129,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660884",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0418",
@@ -15974,7 +17166,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8695164",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0419",
@@ -16008,7 +17203,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8695155",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0420",
@@ -16042,7 +17240,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660032",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0421",
@@ -16076,7 +17277,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660032",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0422",
@@ -16110,7 +17314,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660857",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0423",
@@ -16144,7 +17351,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694201",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0424",
@@ -16178,7 +17388,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660062",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0425",
@@ -16212,7 +17425,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660891",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0426",
@@ -16246,7 +17462,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660023",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0427",
@@ -16280,7 +17499,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694815",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0428",
@@ -16314,7 +17536,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660072",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0429",
@@ -16348,7 +17573,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8695172",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0430",
@@ -16382,7 +17610,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660044",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0431",
@@ -16416,7 +17647,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660882",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0432",
@@ -16450,7 +17684,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694202",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0433",
@@ -16484,7 +17721,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8696308",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0434",
@@ -16518,7 +17758,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680303",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0435",
@@ -16552,7 +17795,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680037",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0436",
@@ -16586,7 +17832,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680037",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0437",
@@ -16620,7 +17869,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680025",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0438",
@@ -16654,7 +17906,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680415",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0439",
@@ -16688,7 +17943,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680043",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0440",
@@ -16722,7 +17980,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680072",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0441",
@@ -16756,7 +18017,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680451",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0442",
@@ -16790,7 +18054,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680501",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0443",
@@ -16824,7 +18091,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680006",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0444",
@@ -16858,7 +18128,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680055",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0445",
@@ -16892,7 +18165,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8616403",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0446",
@@ -16926,7 +18202,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8616102",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0447",
@@ -16960,7 +18239,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8616551",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0448",
@@ -16994,7 +18276,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8630002",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0449",
@@ -17028,7 +18313,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8630003",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0450",
@@ -17062,7 +18350,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8616101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0451",
@@ -17096,7 +18387,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8617314",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0452",
@@ -17130,7 +18424,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8617314",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0453",
@@ -17164,7 +18461,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0454",
@@ -17198,7 +18498,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8630006",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0455",
@@ -17232,7 +18535,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8632507",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0456",
@@ -17266,7 +18572,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8630003",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0457",
@@ -17300,7 +18609,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8630006",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0458",
@@ -17334,7 +18646,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8631212",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0459",
@@ -17368,7 +18683,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8693601",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0460",
@@ -17402,7 +18720,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8631112",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0461",
@@ -17436,7 +18757,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "866－0101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0462",
@@ -17470,7 +18794,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "863ー2171",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0463",
@@ -17504,7 +18831,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0464",
@@ -17538,7 +18868,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614407",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0465",
@@ -17572,7 +18905,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690532",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0466",
@@ -17606,7 +18942,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690622",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0467",
@@ -17640,7 +18979,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690416",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0468",
@@ -17674,7 +19016,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690410",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0469",
@@ -17708,7 +19053,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690410",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0470",
@@ -17742,7 +19090,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690410",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0471",
@@ -17776,7 +19127,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690410",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0472",
@@ -17810,7 +19164,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690410",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0473",
@@ -17844,7 +19201,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640012",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0474",
@@ -17878,7 +19238,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8640023",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0475",
@@ -17912,7 +19275,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0476",
@@ -17946,7 +19312,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8650064",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0477",
@@ -17987,7 +19356,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認。 要支援受入可能。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8650061",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0478",
@@ -18021,7 +19393,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8610302",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0479",
@@ -18062,7 +19437,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認。 要支援受入可。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8610303",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0480",
@@ -18103,7 +19481,10 @@ const FACILITIES = [
         "text": "2025．8.22TELにて確認。 要支援受入可。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8610331",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0481",
@@ -18137,7 +19518,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691221",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0482",
@@ -18171,7 +19555,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611112",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0483",
@@ -18205,7 +19592,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691234",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0484",
@@ -18239,7 +19629,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611103",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0485",
@@ -18273,7 +19666,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611102",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0486",
@@ -18307,7 +19703,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8611114",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0487",
@@ -18341,7 +19740,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8692501",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0488",
@@ -18375,7 +19777,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691504",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0489",
@@ -18409,7 +19814,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691412",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0490",
@@ -18443,7 +19851,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8691412",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0491",
@@ -18477,7 +19888,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614601",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0492",
@@ -18511,7 +19925,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612241",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0493",
@@ -18545,7 +19962,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8613901",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0494",
@@ -18579,7 +19999,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612223",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0495",
@@ -18613,7 +20036,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612231",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0496",
@@ -18647,7 +20073,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8612234",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0497",
@@ -18681,7 +20110,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694704",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0498",
@@ -18715,7 +20147,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660834",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0499",
@@ -18749,7 +20184,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660898",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0500",
@@ -18783,7 +20221,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694701",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0501",
@@ -18817,7 +20258,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660896",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0502",
@@ -18851,7 +20295,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8694602",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0503",
@@ -18885,7 +20332,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660016",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0504",
@@ -18919,7 +20369,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660022",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0505",
@@ -18953,7 +20406,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8670044",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0506",
@@ -18987,7 +20443,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680431",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0507",
@@ -19021,7 +20480,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680302",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0508",
@@ -19055,7 +20517,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680061",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0509",
@@ -19089,7 +20554,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680607",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0510",
@@ -19123,7 +20591,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680502",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0511",
@@ -19157,7 +20628,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8617312",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0512",
@@ -19191,7 +20665,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8630017",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0513",
@@ -19225,7 +20702,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690533",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0514",
@@ -19259,7 +20739,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614721",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0515",
@@ -19293,7 +20776,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8690233",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0516",
@@ -19327,7 +20813,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8692501",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0517",
@@ -19361,7 +20850,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8660861",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0518",
@@ -19395,7 +20887,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8695561",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0519",
@@ -19429,7 +20924,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8670015",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0520",
@@ -19463,7 +20961,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8680451",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0521",
@@ -19504,7 +21005,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。職員に体制により胃瘻は要相談。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8616101",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0522",
@@ -19538,7 +21042,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8693603",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0523",
@@ -19572,7 +21079,10 @@ const FACILITIES = [
     "lastUpdated": "2026-01-05",
     "lastUpdater": "",
     "inheritNote": "2026.1.5来苑。資料いただく。24時間365日介護スタッフ常駐。看取り対応可能。学研のデイサービスが併設",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620971",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0524",
@@ -19606,7 +21116,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620950",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0525",
@@ -19640,7 +21153,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620956",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0526",
@@ -19674,7 +21190,10 @@ const FACILITIES = [
     "lastUpdated": "2025-12-01",
     "lastUpdater": "",
     "inheritNote": "20252.11.28FAXが届く。2室空きあり。ストーマ対応可。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620951",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0527",
@@ -19715,7 +21234,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8600841",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0528",
@@ -19749,7 +21271,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620949",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0529",
@@ -19783,7 +21308,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620950",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0530",
@@ -19817,7 +21345,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620954",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0531",
@@ -19851,7 +21382,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620956",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0532",
@@ -19885,7 +21419,10 @@ const FACILITIES = [
     "lastUpdated": "2025-12-25",
     "lastUpdater": "",
     "inheritNote": "2025.12.25HPに記載あり。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600862",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0533",
@@ -19919,7 +21456,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620941",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0534",
@@ -19953,7 +21493,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620941",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0535",
@@ -19987,7 +21530,10 @@ const FACILITIES = [
     "lastUpdated": "2026-01-05",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600004",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0536",
@@ -20021,7 +21567,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620975",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0537",
@@ -20055,7 +21604,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620924",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0538",
@@ -20089,7 +21641,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620949",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0539",
@@ -20123,7 +21678,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620954",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0540",
@@ -20157,7 +21715,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620972",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0541",
@@ -20191,7 +21752,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620953",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0542",
@@ -20225,7 +21789,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620924",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0543",
@@ -20259,7 +21826,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620950",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0544",
@@ -20293,7 +21863,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620951",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0545",
@@ -20327,7 +21900,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618037",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0546",
@@ -20361,7 +21937,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618028",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0547",
@@ -20395,7 +21974,10 @@ const FACILITIES = [
     "lastUpdated": "2026-05-18",
     "lastUpdater": "",
     "inheritNote": "2026.5.13FAXあり。要介護1以上での入居。兄弟姉妹・夫婦での入居か。外出、外泊可能。\n面会時間は9時～18時居室で可能。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618037",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0548",
@@ -20429,7 +22011,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620912",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0549",
@@ -20463,7 +22048,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618046",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0550",
@@ -20497,7 +22085,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620920",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0551",
@@ -20531,7 +22122,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620926",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0552",
@@ -20565,7 +22159,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618039",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0553",
@@ -20599,7 +22196,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620933",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0554",
@@ -20633,7 +22233,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618043",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0555",
@@ -20667,7 +22270,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618031",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0556",
@@ -20701,7 +22307,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620913",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0557",
@@ -20735,7 +22344,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620913",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0558",
@@ -20769,7 +22381,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618041",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0559",
@@ -20803,7 +22418,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618045",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0560",
@@ -20844,7 +22462,10 @@ const FACILITIES = [
         "text": "2025.4.10TELにて確認。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8620918",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0561",
@@ -20878,7 +22499,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8620918",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0562",
@@ -20912,7 +22536,10 @@ const FACILITIES = [
     "lastUpdated": "2026-04-15",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600067",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0563",
@@ -20946,7 +22573,10 @@ const FACILITIES = [
     "lastUpdated": "2026-01-30",
     "lastUpdater": "",
     "inheritNote": "2026.1.30資料が封書で届く。部屋タイプ22.5㎡、25.0㎡あり、全室トイレ・クローゼット・洗面所・エアコン完備。その他家具等は持ち込み。介護スタッフ24時間常駐。訪問診療又は往診：虹の里クリニック、東病院。",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600073",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0564",
@@ -20980,7 +22610,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600073",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0565",
@@ -21014,7 +22647,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600073",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0566",
@@ -21048,7 +22684,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600079",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0567",
@@ -21089,7 +22728,10 @@ const FACILITIES = [
         "text": "2025.9.12挨拶に来られる。平均要介護度1.9。平均年齢90.1歳。女性入居者が4分の3を占める。要支援入居可。冷暖房、トイレ、化粧台、介護ベッドを完備。個浴、機械浴対応。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8614214",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0568",
@@ -21123,7 +22765,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614113",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0569",
@@ -21157,7 +22802,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8614111",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0570",
@@ -21191,7 +22839,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618001",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0571",
@@ -21225,7 +22876,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618082",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0572",
@@ -21266,7 +22920,10 @@ const FACILITIES = [
         "text": "2055.11.11FAXが届く。介護福祉士を中心に24時間介護、看護師が健康管理、ケア等を行う。専任の機能訓練士配置。",
         "sys": true
       }
-    ]
+    ],
+    "zip": "8610133",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0573",
@@ -21300,7 +22957,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600084",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0574",
@@ -21334,7 +22994,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618075",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0575",
@@ -21368,7 +23031,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600085",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0576",
@@ -21402,7 +23068,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8618081",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0577",
@@ -21436,7 +23105,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8600084",
+    "lat": null,
+    "lng": null
   },
   {
     "id": "F0578",
@@ -21470,7 +23142,10 @@ const FACILITIES = [
     "lastUpdated": "",
     "lastUpdater": "",
     "inheritNote": "",
-    "timeline": []
+    "timeline": [],
+    "zip": "8615523",
+    "lat": null,
+    "lng": null
   }
 ];
 // ============================
@@ -21935,6 +23610,7 @@ function setTypeFilter(type, el) {
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   renderList();
+  if(currentView==='map') updateMapMarkers();
 }
 
 function toggleTag(el, group) {
@@ -21953,6 +23629,7 @@ function applyFilters() {
   costMaxFilter = max ? parseInt(max) : null;
   toggleFilter();
   renderList();
+  if(currentView==='map') updateMapMarkers();
 }
 
 function clearFilters() {
@@ -22222,7 +23899,7 @@ function loadAllTimelines() {
 //  INIT
 // ============================
 loadAllTimelines();
-loadGeoCache();
+loadCoordCache();
 initLoginScreen();
 if (currentUser) {
   // 前回ログイン済み：そのままアプリを表示
@@ -22235,35 +23912,35 @@ if (currentUser) {
 }
 
 // ============================
-//  MAP VIEW
+//  MAP VIEW  (国土地理院ジオコーダ版)
 // ============================
-const GEO_CACHE_KEY = 'finder_geocache_v1';
+const COORD_CACHE_KEY = 'finder_coords_v2';
 let leafletMap = null;
 let mapMarkers = [];
 let currentView = 'list';
-let geocacheStore = {};
+let coordCache = {};
+let mapUpdateTimer = null;
 
-function loadGeoCache() {
+function loadCoordCache() {
   try {
-    const s = localStorage.getItem(GEO_CACHE_KEY);
-    if (s) geocacheStore = JSON.parse(s);
+    const s = localStorage.getItem(COORD_CACHE_KEY);
+    if (s) coordCache = JSON.parse(s);
   } catch(e) {}
 }
 
-function saveGeoCache() {
+function saveCoordCache() {
   try {
-    localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(geocacheStore));
+    localStorage.setItem(COORD_CACHE_KEY, JSON.stringify(coordCache));
   } catch(e) {}
 }
 
 function switchView(view) {
   currentView = view;
   const listScreen = document.getElementById('list-screen');
-  const mapScreen = document.getElementById('map-screen');
-  const fabMain = document.getElementById('fab-main');
-  const tabList = document.getElementById('view-tab-list');
-  const tabMap = document.getElementById('view-tab-map');
-
+  const mapScreen  = document.getElementById('map-screen');
+  const fabMain    = document.getElementById('fab-main');
+  const tabList    = document.getElementById('view-tab-list');
+  const tabMap     = document.getElementById('view-tab-map');
   if (view === 'map') {
     listScreen.classList.add('hidden');
     mapScreen.classList.add('visible');
@@ -22283,124 +23960,116 @@ function switchView(view) {
 
 function initMap() {
   if (leafletMap) return;
-  leafletMap = L.map('leaflet-map', {
-    center: [32.8, 130.7],
-    zoom: 10,
-    zoomControl: true
-  });
+  leafletMap = L.map('leaflet-map', { center: [32.80, 130.70], zoom: 10 });
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 18
   }).addTo(leafletMap);
 }
 
-const pinIcon = L.divIcon({
-  className: '',
-  html: '<div style="width:12px;height:12px;background:#2D6A4F;border:2px solid white;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>',
-  iconSize: [12, 12],
-  iconAnchor: [6, 6],
-  popupAnchor: [0, -8]
-});
-
-function getFilteredFacilities() {
-  const rawKeyword = (document.getElementById('main-search').value || '').trim();
-  const keyword = normalizeJa(rawKeyword);
-  const showClosed = currentTypeFilter === '_closed';
+function getFilteredForMap() {
+  const keyword = normalizeJa((document.getElementById('main-search').value||'').trim());
   return FACILITIES.filter(f => {
-    if (showClosed) return f.status === 'closed';
-    if (f.status === 'closed' || f.status === 'discontinued' || f.status === 'suspended') return false;
-    if (!f.name) return false;
-    if (currentTypeFilter !== 'all' && f.type !== currentTypeFilter) return false;
+    if (!f.name || !f.address) return false;
+    if (f.status === 'discontinued' || f.status === 'suspended') return false;
+    if (currentTypeFilter !== 'all' && currentTypeFilter !== '_closed' && f.type !== currentTypeFilter) return false;
     if (keyword && !normalizeJa(f.name).includes(keyword) && !normalizeJa(f.address).includes(keyword)) return false;
     if (activeWardFilters.length > 0 && !activeWardFilters.includes(f.ward)) return false;
-    if (costMinFilter !== null && f.costMax !== null && f.costMax < costMinFilter) return false;
-    if (costMaxFilter !== null && f.costMin !== null && f.costMin > costMaxFilter) return false;
+    if (costMinFilter !== null && f.costMax && f.costMax < costMinFilter) return false;
+    if (costMaxFilter !== null && f.costMin && f.costMin > costMaxFilter) return false;
     if (activeCareFilters.length > 0) {
-      const careMap = { "生活保護":"seikatsuHogo","看取り":"mitomori","24h看護師":"kango24h","インスリン":"insulin","褥瘡":"jokuso","バルーン":"balloon","胃瘻":"irou","点滴":"tenteki","IVH":"ivh","吸引":"kyuin","酸素":"sanso","気管切開":"kissetsu","人工呼吸器":"kokyuki","透析":"toseki" };
+      const careMap = {"生活保護":"seikatsuHogo","看取り":"mitomori","24h看護師":"kango24h","インスリン":"insulin","褥瘡":"jokuso","バルーン":"balloon","胃瘻":"irou","点滴":"tenteki","IVH":"ivh","吸引":"kyuin","酸素":"sanso","気管切開":"kissetsu","人工呼吸器":"kokyuki","透析":"toseki"};
       for (const label of activeCareFilters) {
         const key = careMap[label];
         if (!key) continue;
-        const val = f.care[key] || "";
-        if (!val || val === "×") return false;
+        const val = (f.care && f.care[key]) || "";
+        if (!val || val === "x" || val === "×") return false;
       }
     }
     return true;
   });
 }
 
-async function geocodeAddress(facilityId, address) {
-  if (geocacheStore[facilityId]) return geocacheStore[facilityId];
+async function fetchCoord(facilityId, address) {
+  if (coordCache[facilityId]) return coordCache[facilityId];
   try {
-    const url = 'https://nominatim.openstreetmap.org/search?' + new URLSearchParams({
-      q: address + ' 熊本県',
-      format: 'json',
-      limit: 1,
-      countrycodes: 'jp'
-    });
-    const res = await fetch(url, { headers: { 'Accept-Language': 'ja' } });
+    const url = 'https://msearch.gsi.go.jp/address-search/AddressSearch?q=' + encodeURIComponent(address);
+    const res = await fetch(url);
     const data = await res.json();
-    if (data && data[0]) {
-      const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-      geocacheStore[facilityId] = coord;
-      saveGeoCache();
+    if (data && data[0] && data[0].geometry) {
+      const [lng, lat] = data[0].geometry.coordinates;
+      const coord = { lat, lng };
+      coordCache[facilityId] = coord;
+      saveCoordCache();
       return coord;
     }
   } catch(e) {}
   return null;
 }
 
-async function updateMapMarkers() {
+function updateMapMarkers() {
+  if (!leafletMap) return;
+  if (mapUpdateTimer) clearTimeout(mapUpdateTimer);
+  mapUpdateTimer = setTimeout(_doUpdateMapMarkers, 150);
+}
+
+async function _doUpdateMapMarkers() {
   if (!leafletMap) return;
   mapMarkers.forEach(m => m.remove());
   mapMarkers = [];
 
-  const filtered = getFilteredFacilities();
+  const filtered = getFilteredForMap();
   document.getElementById('map-count-badge').textContent = filtered.length + '件表示中';
 
-  // 座標ありの施設をまず表示、なければジオコーディング（最大50件ずつ）
-  const toGeocode = [];
-  for (const f of filtered) {
-    if (!f.address) continue;
-    const cached = geocacheStore[f.id];
-    if (cached) {
-      addMarker(f, cached.lat, cached.lng);
-    } else {
-      toGeocode.push(f);
-    }
-  }
+  // キャッシュ済みをまず全件描画
+  filtered.forEach(f => {
+    const c = coordCache[f.id];
+    if (c) addMarker(f, c.lat, c.lng);
+  });
 
-  // ジオコーディングは最大30件まで（レート制限対策）
-  const batch = toGeocode.slice(0, 30);
-  for (const f of batch) {
-    const coord = await geocodeAddress(f.id, f.address);
+  // 未キャッシュを順次取得（間隔100ms、最大200件）
+  const uncached = filtered.filter(f => !coordCache[f.id]).slice(0, 200);
+  for (const f of uncached) {
+    const coord = await fetchCoord(f.id, f.address);
     if (coord) addMarker(f, coord.lat, coord.lng);
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise(r => setTimeout(r, 100));
   }
 
-  // マーカーが1件以上あれば自動フィット
   if (mapMarkers.length > 0) {
-    const group = L.featureGroup(mapMarkers);
-    leafletMap.fitBounds(group.getBounds().pad(0.1));
+    try {
+      leafletMap.fitBounds(L.featureGroup(mapMarkers).getBounds().pad(0.1));
+    } catch(e) {}
   }
 }
 
 function addMarker(f, lat, lng) {
-  const typeColor = f.type === '介護付' ? '#2563EB' : f.type === 'サ高住' ? '#D97706' : '#2D6A4F';
-  const icon = L.divIcon({
+  var typeColor = f.type === '介護付' ? '#2563EB' : f.type === 'サ高住' ? '#D97706' : '#2D6A4F';
+  var pinHtml = '<div style=' + "'width:10px;height:10px;background:" + typeColor + ";border:2px solid white;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);'></div>";
+  var icon = L.divIcon({
     className: '',
-    html: `<div style="width:10px;height:10px;background:${typeColor};border:2px solid white;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>`,
-    iconSize: [10, 10],
-    iconAnchor: [5, 5],
-    popupAnchor: [0, -8]
+    html: pinHtml,
+    iconSize: [10,10], iconAnchor: [5,5], popupAnchor: [0,-8]
   });
-  const marker = L.marker([lat, lng], { icon })
-    .bindPopup(`<div class="map-popup-name">${f.name}</div><div class="map-popup-type">${f.type} | ${f.ward || f.address.slice(0,8)}</div><a class="map-popup-link" onclick="switchView('list');openDetail('${f.id}')">詳細を見る →</a>`)
+  var fid = f.id;
+  var costStr = f.monthlyFeeRaw ? f.monthlyFeeRaw.substring(0,14) : '費用情報なし';
+  var ward = f.ward || '';
+  var popup = [
+    '<b style=font-size:13px>' + f.name + '</b><br>',
+    '<span style=font-size:11px;color:#666>' + f.type + (ward ? '｜' + ward : '') + '</span><br>',
+    '<span style=font-size:11px;color:#666>' + costStr + '</span><br>',
+    '<a style=font-size:12px;color:#2D6A4F;font-weight:600;cursor:pointer onclick=mapOpenDetail("' + fid + '")>詳細を見る →</a>'
+  ].join('');
+  var marker = L.marker([lat, lng], { icon: icon })
+    .bindPopup(popup)
     .addTo(leafletMap);
+  marker._fid = fid;
   mapMarkers.push(marker);
 }
 
-// ページ読み込み時にキャッシュ読み込み（initLoginScreenと同タイミング）
-
+function mapOpenDetail(fid) {
+  switchView('list');
+  setTimeout(function(){ openDetail(fid); }, 100);
+}
 </script>
 </body>
 </html>
