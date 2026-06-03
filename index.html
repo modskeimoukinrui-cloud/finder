@@ -23553,9 +23553,8 @@ function showDetail(id) {
       </div>
     </a>
     <div class="photo-strip">
-      <div class="photo-thumb">📸</div>
-      <div class="photo-thumb">📄</div>
-      <div class="photo-add">➕</div>
+      <div class="photo-thumb" onclick="showPhotoComingSoon()" style="cursor:pointer;" title="写真">📸</div>
+      <div class="photo-add" onclick="showPhotoComingSoon()" style="cursor:pointer;" title="写真を追加">➕</div>
     </div>
 
     <div class="detail-section">
@@ -24069,6 +24068,10 @@ function addMarker(f, lat, lng) {
 function mapOpenDetail(fid) {
   switchView('list');
   setTimeout(function(){ openDetail(fid); }, 100);
+}
+
+function showPhotoComingSoon() {
+  alert('写真機能はフィールドテスト後に実装予定です。\nチラシ・パンフレットの保存などに活用できる予定です。');
 }
 </script>
 </body>
