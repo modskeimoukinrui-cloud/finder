@@ -1182,7 +1182,81 @@
   }
   .header-user-name { font-size: 11px; font-weight: 600; color: var(--accent); }
 
+
+  /* ========== MAP VIEW ========== */
+  .view-tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1.5px solid var(--border);
+  }
+  .view-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border: none;
+    background: none;
+    transition: color 0.15s;
+  }
+  .view-tab.active {
+    color: var(--accent);
+    border-bottom: 2.5px solid var(--accent);
+  }
+  #map-screen {
+    display: none;
+    flex-direction: column;
+    height: calc(100vh - 56px);
+    position: relative;
+  }
+  #map-screen.visible { display: flex; }
+  #leaflet-map {
+    flex: 1;
+    width: 100%;
+    z-index: 1;
+  }
+  .map-count-badge {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.95);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    z-index: 1000;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .map-popup-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1A1815;
+    margin-bottom: 2px;
+  }
+  .map-popup-type {
+    font-size: 11px;
+    color: #6B6660;
+    margin-bottom: 4px;
+  }
+  .map-popup-link {
+    font-size: 12px;
+    color: #2D6A4F;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .leaflet-popup-content { margin: 8px 12px; min-width: 140px; }
+  .list-screen { display: flex; flex-direction: column; }
+  .list-screen.hidden { display: none; }
+
 </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 </head>
 <body>
 <div class="phone-frame">
@@ -1294,6 +1368,11 @@
     </div>
   </div>
 
+  <div class="view-tabs">
+    <button class="view-tab active" id="view-tab-list" onclick="switchView('list')">📋 リスト</button>
+    <button class="view-tab" id="view-tab-map" onclick="switchView('map')">🗺 マップ</button>
+  </div>
+
   <div class="filter-row">
     <button class="filter-chip active" onclick="setTypeFilter('all',this)">すべて</button>
     <button class="filter-chip" onclick="setTypeFilter('介護付',this)">介護付</button>
@@ -1368,6 +1447,7 @@
     </div>
   </div>
 
+  <div class="list-screen" id="list-screen">
   <div class="result-bar">
     <div class="result-count">検索結果：<strong id="result-count-num">15</strong>件</div>
     <div class="tab-group">
@@ -1380,6 +1460,12 @@
   <div class="list-content" id="facility-list"></div>
 
   <button class="fab" id="fab-main" onclick="openMemoSheet(null)">✏️</button>
+  </div><!-- /list-screen -->
+
+  <div id="map-screen">
+    <div class="map-count-badge" id="map-count-badge">578件表示中</div>
+    <div id="leaflet-map"></div>
+  </div>
 </div>
 
 <!-- ===== SCREEN 2: DETAIL ===== -->
@@ -7374,40 +7460,6 @@ const FACILITIES = [
     "ward": "東",
     "address": "熊本市東区保田窪５丁目９－８４",
     "tel": "096-377-8033",
-    "status": "active",
-    "care": {
-      "seikatsuHogo": "",
-      "kango24h": "",
-      "mitomori": "",
-      "insulin": "",
-      "jokuso": "",
-      "balloon": "",
-      "irou": "",
-      "tenteki": "",
-      "ivh": "",
-      "kyuin": "",
-      "sanso": "",
-      "kissetsu": "",
-      "kokyuki": "",
-      "toseki": ""
-    },
-    "costMin": 0,
-    "costMax": 0,
-    "monthlyFeeRaw": "",
-    "nyukyoFee": "",
-    "costNote": "",
-    "lastUpdated": "",
-    "lastUpdater": "",
-    "inheritNote": "",
-    "timeline": []
-  },
-  {
-    "id": "F0171",
-    "name": "",
-    "type": "",
-    "ward": "",
-    "address": "",
-    "tel": "",
     "status": "active",
     "care": {
       "seikatsuHogo": "",
@@ -21916,7 +21968,7 @@ function clearFilters() {
   renderList();
 }
 
-function doSearch() { renderList(); }
+function doSearch() { renderList(); if(currentView==="map") updateMapMarkers(); }
 function setSort(mode, el) {
   sortMode = mode;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -22170,6 +22222,7 @@ function loadAllTimelines() {
 //  INIT
 // ============================
 loadAllTimelines();
+loadGeoCache();
 initLoginScreen();
 if (currentUser) {
   // 前回ログイン済み：そのままアプリを表示
@@ -22180,6 +22233,174 @@ if (currentUser) {
   // 未ログイン：ログイン画面を表示
   document.getElementById('login-screen').classList.remove('hidden');
 }
+
+// ============================
+//  MAP VIEW
+// ============================
+const GEO_CACHE_KEY = 'finder_geocache_v1';
+let leafletMap = null;
+let mapMarkers = [];
+let currentView = 'list';
+let geocacheStore = {};
+
+function loadGeoCache() {
+  try {
+    const s = localStorage.getItem(GEO_CACHE_KEY);
+    if (s) geocacheStore = JSON.parse(s);
+  } catch(e) {}
+}
+
+function saveGeoCache() {
+  try {
+    localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(geocacheStore));
+  } catch(e) {}
+}
+
+function switchView(view) {
+  currentView = view;
+  const listScreen = document.getElementById('list-screen');
+  const mapScreen = document.getElementById('map-screen');
+  const fabMain = document.getElementById('fab-main');
+  const tabList = document.getElementById('view-tab-list');
+  const tabMap = document.getElementById('view-tab-map');
+
+  if (view === 'map') {
+    listScreen.classList.add('hidden');
+    mapScreen.classList.add('visible');
+    fabMain.style.display = 'none';
+    tabList.classList.remove('active');
+    tabMap.classList.add('active');
+    initMap();
+    updateMapMarkers();
+  } else {
+    listScreen.classList.remove('hidden');
+    mapScreen.classList.remove('visible');
+    fabMain.style.display = '';
+    tabList.classList.add('active');
+    tabMap.classList.remove('active');
+  }
+}
+
+function initMap() {
+  if (leafletMap) return;
+  leafletMap = L.map('leaflet-map', {
+    center: [32.8, 130.7],
+    zoom: 10,
+    zoomControl: true
+  });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 18
+  }).addTo(leafletMap);
+}
+
+const pinIcon = L.divIcon({
+  className: '',
+  html: '<div style="width:12px;height:12px;background:#2D6A4F;border:2px solid white;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>',
+  iconSize: [12, 12],
+  iconAnchor: [6, 6],
+  popupAnchor: [0, -8]
+});
+
+function getFilteredFacilities() {
+  const rawKeyword = (document.getElementById('main-search').value || '').trim();
+  const keyword = normalizeJa(rawKeyword);
+  const showClosed = currentTypeFilter === '_closed';
+  return FACILITIES.filter(f => {
+    if (showClosed) return f.status === 'closed';
+    if (f.status === 'closed' || f.status === 'discontinued' || f.status === 'suspended') return false;
+    if (!f.name) return false;
+    if (currentTypeFilter !== 'all' && f.type !== currentTypeFilter) return false;
+    if (keyword && !normalizeJa(f.name).includes(keyword) && !normalizeJa(f.address).includes(keyword)) return false;
+    if (activeWardFilters.length > 0 && !activeWardFilters.includes(f.ward)) return false;
+    if (costMinFilter !== null && f.costMax !== null && f.costMax < costMinFilter) return false;
+    if (costMaxFilter !== null && f.costMin !== null && f.costMin > costMaxFilter) return false;
+    if (activeCareFilters.length > 0) {
+      const careMap = { "生活保護":"seikatsuHogo","看取り":"mitomori","24h看護師":"kango24h","インスリン":"insulin","褥瘡":"jokuso","バルーン":"balloon","胃瘻":"irou","点滴":"tenteki","IVH":"ivh","吸引":"kyuin","酸素":"sanso","気管切開":"kissetsu","人工呼吸器":"kokyuki","透析":"toseki" };
+      for (const label of activeCareFilters) {
+        const key = careMap[label];
+        if (!key) continue;
+        const val = f.care[key] || "";
+        if (!val || val === "×") return false;
+      }
+    }
+    return true;
+  });
+}
+
+async function geocodeAddress(facilityId, address) {
+  if (geocacheStore[facilityId]) return geocacheStore[facilityId];
+  try {
+    const url = 'https://nominatim.openstreetmap.org/search?' + new URLSearchParams({
+      q: address + ' 熊本県',
+      format: 'json',
+      limit: 1,
+      countrycodes: 'jp'
+    });
+    const res = await fetch(url, { headers: { 'Accept-Language': 'ja' } });
+    const data = await res.json();
+    if (data && data[0]) {
+      const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      geocacheStore[facilityId] = coord;
+      saveGeoCache();
+      return coord;
+    }
+  } catch(e) {}
+  return null;
+}
+
+async function updateMapMarkers() {
+  if (!leafletMap) return;
+  mapMarkers.forEach(m => m.remove());
+  mapMarkers = [];
+
+  const filtered = getFilteredFacilities();
+  document.getElementById('map-count-badge').textContent = filtered.length + '件表示中';
+
+  // 座標ありの施設をまず表示、なければジオコーディング（最大50件ずつ）
+  const toGeocode = [];
+  for (const f of filtered) {
+    if (!f.address) continue;
+    const cached = geocacheStore[f.id];
+    if (cached) {
+      addMarker(f, cached.lat, cached.lng);
+    } else {
+      toGeocode.push(f);
+    }
+  }
+
+  // ジオコーディングは最大30件まで（レート制限対策）
+  const batch = toGeocode.slice(0, 30);
+  for (const f of batch) {
+    const coord = await geocodeAddress(f.id, f.address);
+    if (coord) addMarker(f, coord.lat, coord.lng);
+    await new Promise(r => setTimeout(r, 1100));
+  }
+
+  // マーカーが1件以上あれば自動フィット
+  if (mapMarkers.length > 0) {
+    const group = L.featureGroup(mapMarkers);
+    leafletMap.fitBounds(group.getBounds().pad(0.1));
+  }
+}
+
+function addMarker(f, lat, lng) {
+  const typeColor = f.type === '介護付' ? '#2563EB' : f.type === 'サ高住' ? '#D97706' : '#2D6A4F';
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="width:10px;height:10px;background:${typeColor};border:2px solid white;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>`,
+    iconSize: [10, 10],
+    iconAnchor: [5, 5],
+    popupAnchor: [0, -8]
+  });
+  const marker = L.marker([lat, lng], { icon })
+    .bindPopup(`<div class="map-popup-name">${f.name}</div><div class="map-popup-type">${f.type} | ${f.ward || f.address.slice(0,8)}</div><a class="map-popup-link" onclick="switchView('list');openDetail('${f.id}')">詳細を見る →</a>`)
+    .addTo(leafletMap);
+  mapMarkers.push(marker);
+}
+
+// ページ読み込み時にキャッシュ読み込み（initLoginScreenと同タイミング）
+
 </script>
 </body>
 </html>
