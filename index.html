@@ -23431,7 +23431,13 @@ function renderList() {
     if (f.status === 'closed') return false;
     if (currentTypeFilter !== 'all' && f.type !== currentTypeFilter) return false;
     if (keyword && !normalizeJa(f.name).includes(keyword) && !normalizeJa(f.address).includes(keyword)) return false;
-    if (activeWardFilters.length > 0 && !activeWardFilters.includes(f.ward)) return false;
+    if (activeWardFilters.length > 0) {
+      const wardMatch = activeWardFilters.some(w => {
+        if (f.ward) return f.ward === w;
+        return f.address && f.address.includes(w);
+      });
+      if (!wardMatch) return false;
+    }
     if (costMinFilter !== null && f.costMax !== null && f.costMax < costMinFilter) return false;
     if (costMaxFilter !== null && f.costMin !== null && f.costMin > costMaxFilter) return false;
     if (activeCareFilters.length > 0) {
@@ -23973,7 +23979,13 @@ function getFilteredForMap() {
     if (f.status === 'discontinued' || f.status === 'suspended') return false;
     if (currentTypeFilter !== 'all' && currentTypeFilter !== '_closed' && f.type !== currentTypeFilter) return false;
     if (keyword && !normalizeJa(f.name).includes(keyword) && !normalizeJa(f.address).includes(keyword)) return false;
-    if (activeWardFilters.length > 0 && !activeWardFilters.includes(f.ward)) return false;
+    if (activeWardFilters.length > 0) {
+      const wardMatch = activeWardFilters.some(w => {
+        if (f.ward) return f.ward === w;
+        return f.address && f.address.includes(w);
+      });
+      if (!wardMatch) return false;
+    }
     if (costMinFilter !== null && f.costMax && f.costMax < costMinFilter) return false;
     if (costMaxFilter !== null && f.costMin && f.costMin > costMaxFilter) return false;
     if (activeCareFilters.length > 0) {
