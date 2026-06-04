@@ -1187,6 +1187,21 @@
   .view-tabs { display:flex; background:var(--surface); border-bottom:1.5px solid var(--border); }
   .view-tab { flex:1; text-align:center; padding:10px 0; font-size:13px; font-weight:500; color:var(--text-secondary); cursor:pointer; border:none; background:none; }
   .view-tab.active { color:var(--accent); border-bottom:2.5px solid var(--accent); }
+  /* ===== セクションタブ（view-tabと統一） ===== */
+  .section-tab-bar { display:flex; background:var(--surface); border-bottom:1.5px solid var(--border); }
+  .section-tab { flex:1; text-align:center; padding:10px 0; font-size:13px; font-weight:500; color:var(--text-secondary); cursor:pointer; border:none; background:none; }
+  .section-tab.active { color:var(--accent); border-bottom:2.5px solid var(--accent); }
+  /* ===== ブックマークボタン ===== */
+  .bookmark-btn { background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; line-height:1; flex-shrink:0; opacity:0.35; transition:opacity 0.15s, transform 0.15s; }
+  .bookmark-btn.active { opacity:1; }
+  .bookmark-btn:active { transform:scale(1.3); }
+  /* ===== 履歴・お気に入りカード ===== */
+  .history-card { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); cursor:pointer; background:var(--surface); transition:background 0.12s; }
+  .history-card:active { background:var(--bg); }
+  .history-card-info { flex:1; min-width:0; }
+  .history-card-name { font-size:14px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .history-card-sub { font-size:11px; color:var(--text-secondary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .history-empty { text-align:center; color:var(--text-muted); font-size:13px; padding:48px 16px; line-height:1.8; }
   #map-screen { display:none; flex-direction:column; height:calc(100vh - 56px); position:relative; }
   #map-screen.visible { display:flex; }
   #leaflet-map { flex:1; width:100%; z-index:1; }
@@ -1195,6 +1210,7 @@
   .map-popup-type { font-size:11px; color:#6B6660; margin-bottom:2px; }
   .map-popup-link { font-size:12px; color:#2D6A4F; font-weight:600; cursor:pointer; }
   .leaflet-popup-content { margin:8px 12px; min-width:140px; }
+
   .list-screen { display:flex; flex-direction:column; }
   .list-screen.hidden { display:none; }
 
@@ -1392,6 +1408,11 @@
   </div>
 
   <div class="list-screen" id="list-screen">
+  <div class="section-tab-bar">
+    <button class="section-tab active" id="stab-all"    onclick="setSectionTab('all',this)">すべて</button>
+    <button class="section-tab"       id="stab-bm"     onclick="setSectionTab('bookmark',this)">⭐ お気に入り</button>
+    <button class="section-tab"       id="stab-history" onclick="setSectionTab('history',this)">🕐 最近見た</button>
+  </div>
   <div class="result-bar">
     <div class="result-count">検索結果：<strong id="result-count-num">15</strong>件</div>
     <div class="tab-group">
@@ -1406,6 +1427,7 @@
   <button class="fab" id="fab-main" onclick="openMemoSheet(null)">✏️</button>
   </div><!-- /list-screen -->
 
+
   <div id="map-screen">
     <div class="map-count-badge" id="map-count-badge">---件表示中</div>
     <div id="leaflet-map"></div>
@@ -1418,6 +1440,7 @@
     <button class="back-btn" onclick="showScreen('list')">←</button>
     <div class="detail-title" id="detail-name">施設名</div>
     <div id="detail-type-badge"></div>
+    <button class="bookmark-btn" id="detail-bm-btn" onclick="toggleBookmarkDetail()" title="お気に入り" style="font-size:20px;margin-left:4px;">☆</button>
   </div>
 
   <div class="detail-content" id="detail-content">
@@ -23160,6 +23183,46 @@ let currentFacilityId = null;
 let memoTargetId = null;
 let isFilterOpen = false;
 let sortMode = 'name';
+let currentSectionTab = 'all';
+
+// ブックマーク・閲覧履歴
+const BM_KEY = 'finder_bookmarks';
+const HIST_KEY = 'finder_history';
+const HIST_MAX = 10;
+
+function loadBookmarks() {
+  try { return JSON.parse(localStorage.getItem(BM_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveBookmarks(arr) {
+  try { localStorage.setItem(BM_KEY, JSON.stringify(arr)); } catch(e) {}
+}
+function toggleBookmark(id, btn) {
+  let bm = loadBookmarks();
+  if (bm.includes(id)) {
+    bm = bm.filter(x => x !== id);
+    btn.textContent = '☆'; btn.classList.remove('active');
+  } else {
+    bm.push(id);
+    btn.textContent = '⭐'; btn.classList.add('active');
+  }
+  saveBookmarks(bm);
+  if (currentSectionTab === 'bookmark') renderList();
+}
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch(e) { return []; }
+}
+function addHistory(id) {
+  let hist = loadHistory().filter(x => x !== id);
+  hist.unshift(id);
+  if (hist.length > HIST_MAX) hist = hist.slice(0, HIST_MAX);
+  try { localStorage.setItem(HIST_KEY, JSON.stringify(hist)); } catch(e) {}
+}
+function setSectionTab(tab, el) {
+  currentSectionTab = tab;
+  document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
 
 // ============================
 //  MEMBERS & AUTH
@@ -23425,6 +23488,30 @@ function renderList() {
   const keyword = normalizeJa(rawKeyword);
   const list = document.getElementById('facility-list');
   const showClosed = currentTypeFilter === '_closed';
+  const bookmarks = loadBookmarks();
+  const history = loadHistory();
+
+  // セクションタブ：お気に入り・最近見た は専用レンダリング
+  if (currentSectionTab === 'bookmark') {
+    const bmFacilities = bookmarks.map(id => FACILITIES.find(f => f.id === id)).filter(Boolean);
+    if (bmFacilities.length === 0) {
+      list.innerHTML = '<div class="history-empty">⭐ お気に入りに登録した施設がありません<br><span style="font-size:11px;margin-top:6px;display:block;">施設カードの ☆ をタップして登録できます</span></div>';
+    } else {
+      list.innerHTML = bmFacilities.map(f => renderHistoryCard(f, bookmarks)).join('');
+    }
+    document.getElementById('result-count-num').textContent = bmFacilities.length;
+    return;
+  }
+  if (currentSectionTab === 'history') {
+    const histFacilities = history.map(id => FACILITIES.find(f => f.id === id)).filter(Boolean);
+    if (histFacilities.length === 0) {
+      list.innerHTML = '<div class="history-empty">🕐 最近見た施設がありません</div>';
+    } else {
+      list.innerHTML = histFacilities.map(f => renderHistoryCard(f, bookmarks)).join('');
+    }
+    document.getElementById('result-count-num').textContent = histFacilities.length;
+    return;
+  }
 
   let filtered = FACILITIES.filter(f => {
     if (showClosed) return f.status === 'closed';
@@ -23498,9 +23585,11 @@ function renderList() {
     const careTags = activeCare.slice(0,5).map(([k]) => `<span class="care-tag care-tag-green">${CARE_LABELS[k]}</span>`).join('') +
       consultCare.slice(0,2).map(([k]) => `<span class="care-tag care-tag-amber">${CARE_LABELS[k]}▲</span>`).join('');
 
+    const isBm = bookmarks.includes(f.id);
     html += `<div class="facility-card" onclick="showDetail('${f.id}')">
       <div class="card-top">
         <div class="facility-name">${f.status==='closed'?'<span style="opacity:.6">'+f.name+'</span>':f.name}</div>
+        <button class="bookmark-btn ${isBm?'active':''}" onclick="event.stopPropagation();toggleBookmark('${f.id}',this)" title="お気に入り">${isBm?'⭐':'☆'}</button>
         <span class="type-badge type-${f.type}">${f.type}</span>
       </div>
       <div class="card-addr">📍 ${f.address}</div>
@@ -23521,10 +23610,31 @@ function renderList() {
 // ============================
 //  SHOW DETAIL
 // ============================
+function renderHistoryCard(f, bookmarks) {
+  const isBm = bookmarks.includes(f.id);
+  const lastTl = f.timeline.length > 0 ? [...f.timeline].filter(t=>!t.sys)[0] : null;
+  const sub = lastTl ? `💬 ${lastTl.text.replace(/【.*?】/g,'').substring(0,30)}…` : f.address.substring(0,28);
+  return `<div class="history-card" onclick="showDetail('${f.id}')">
+    <div style="font-size:20px;flex-shrink:0;">${f.type==='介護付'?'🏥':f.type==='住宅型'?'🏠':'🏡'}</div>
+    <div class="history-card-info">
+      <div class="history-card-name">${f.name}</div>
+      <div class="history-card-sub">${f.type}｜${sub}</div>
+    </div>
+    <button class="bookmark-btn ${isBm?'active':''}" onclick="event.stopPropagation();toggleBookmark('${f.id}',this)" title="お気に入り">${isBm?'⭐':'☆'}</button>
+  </div>`;
+}
+
 function showDetail(id) {
   const f = FACILITIES.find(x => x.id === id);
   if (!f) return;
+  addHistory(id);
   currentFacilityId = id;
+
+  // ブックマークボタンの状態反映
+  const bmBtn = document.getElementById('detail-bm-btn');
+  const bms = loadBookmarks();
+  if (bms.includes(id)) { bmBtn.textContent = '⭐'; bmBtn.classList.add('active'); bmBtn.style.opacity='1'; }
+  else { bmBtn.textContent = '☆'; bmBtn.classList.remove('active'); bmBtn.style.opacity='0.4'; }
 
   document.getElementById('detail-name').textContent = f.name;
   const typeBadge = document.getElementById('detail-type-badge');
@@ -24080,6 +24190,22 @@ function addMarker(f, lat, lng) {
 function mapOpenDetail(fid) {
   switchView('list');
   setTimeout(function(){ showDetail(fid); }, 100);
+}
+
+function toggleBookmarkDetail() {
+  if (!currentFacilityId) return;
+  const btn = document.getElementById('detail-bm-btn');
+  let bm = loadBookmarks();
+  if (bm.includes(currentFacilityId)) {
+    bm = bm.filter(x => x !== currentFacilityId);
+    btn.textContent = '☆'; btn.classList.remove('active'); btn.style.opacity='0.4';
+    showToast('お気に入りから外しました');
+  } else {
+    bm.push(currentFacilityId);
+    btn.textContent = '⭐'; btn.classList.add('active'); btn.style.opacity='1';
+    showToast('⭐ お気に入りに追加しました');
+  }
+  saveBookmarks(bm);
 }
 
 function showPhotoComingSoon() {
