@@ -1191,6 +1191,16 @@
   .section-tab-bar { display:flex; background:var(--surface); border-bottom:1.5px solid var(--border); }
   .section-tab { flex:1; text-align:center; padding:10px 0; font-size:13px; font-weight:500; color:var(--text-secondary); cursor:pointer; border:none; background:none; }
   .section-tab.active { color:var(--accent); border-bottom:2.5px solid var(--accent); }
+  /* ===== 空床状況バッジ ===== */
+  .vacancy-badge { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600; padding:3px 8px; border-radius:20px; white-space:nowrap; }
+  .vacancy-available  { background:#E8F5E9; color:#2E7D32; }
+  .vacancy-soon       { background:#FFF8E1; color:#F57F17; }
+  .vacancy-full       { background:#FFEBEE; color:#C62828; }
+  .vacancy-stale1     { background:#F5F5F5; color:#9E9E9E; }
+  .vacancy-stale2     { background:#F5F5F5; color:#BDBDBD; }
+  .vacancy-note       { font-size:11px; color:var(--text-secondary); margin-top:2px; }
+  .vacancy-section    { padding:12px 16px; border-bottom:1px solid var(--border); background:var(--surface); }
+  .vacancy-section-title { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
   /* ===== ブックマークボタン ===== */
   .bookmark-btn { background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; line-height:1; flex-shrink:0; opacity:0.35; transition:opacity 0.15s, transform 0.15s; }
   .bookmark-btn.active { opacity:1; }
@@ -23225,6 +23235,41 @@ function setSectionTab(tab, el) {
 }
 
 // ============================
+//  空床状況ユーティリティ
+// ============================
+const VACANCY_LABELS = {
+  'available': '✅ 空きあり',
+  'soon':      '⏳ 近日空き予定',
+  'full':      '❌ 満床'
+};
+const VACANCY_STALE1_DAYS = 14;
+const VACANCY_STALE2_DAYS = 30;
+const VACANCY_HIDE_DAYS   = 60;
+
+function vacancyDaysSince(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function renderVacancyBadge(f) {
+  if (!f.vacancy) return '';
+  const days = vacancyDaysSince(f.vacancyDate);
+  if (days !== null && days >= VACANCY_HIDE_DAYS) return '';
+
+  let cls = 'vacancy-available';
+  if (f.vacancy === 'soon') cls = 'vacancy-soon';
+  if (f.vacancy === 'full') cls = 'vacancy-full';
+  if (days !== null && days >= VACANCY_STALE2_DAYS) cls = 'vacancy-stale2';
+  else if (days !== null && days >= VACANCY_STALE1_DAYS) cls = 'vacancy-stale1';
+
+  const label = VACANCY_LABELS[f.vacancy] || '';
+  const ago = days !== null ? `<span style="font-size:10px;font-weight:400;margin-left:4px;">${days}日前確認</span>` : '';
+  return `<span class="vacancy-badge ${cls}">${label}${ago}</span>`;
+}
+
+// ============================
 //  MEMBERS & AUTH
 // ============================
 const MEMBERS = ["朝長", "大矢野", "小﨑", "片山", "栗岡", "清田", "塩﨑", "高見", "建石", "中島え", "中島か", "中村", "森本", "三村", "八木田", "上野"];
@@ -23519,8 +23564,11 @@ function renderList() {
     if (currentTypeFilter !== 'all' && f.type !== currentTypeFilter) return false;
     if (keyword && !normalizeJa(f.name).includes(keyword) && !normalizeJa(f.address).includes(keyword)) return false;
     if (activeWardFilters.length > 0) {
+      const CITY_WARDS = ['東', '西', '南', '北', '中央'];
       const wardMatch = activeWardFilters.some(w => {
         if (f.ward) return f.ward === w;
+        // 熊本市5区の選択肢はwardが空の施設にはマッチさせない
+        if (CITY_WARDS.includes(w)) return false;
         return f.address && f.address.includes(w);
       });
       if (!wardMatch) return false;
@@ -23593,6 +23641,7 @@ function renderList() {
         <span class="type-badge type-${f.type}">${f.type}</span>
       </div>
       <div class="card-addr">📍 ${f.address}</div>
+      ${renderVacancyBadge(f) ? `<div style="padding:4px 0 2px 0;">${renderVacancyBadge(f)}</div>` : ''}
       <div class="card-meta">
         <div class="care-tags">${f.status==='closed'?'<span class="closed-badge">⛔ 廃止 '+f.closedDate+'</span>':careTags}</div>
         ${f.status!=='closed'?`<div class="cost-badge">${costStr}<br><span>/月</span></div>`:''}
@@ -23684,6 +23733,14 @@ function showDetail(id) {
     </div>
 
     ${f.status !== 'closed' ? `
+    <div class="vacancy-section">
+      <div class="vacancy-section-title">🏠 空床状況</div>
+      ${renderVacancyBadge(f) || '<span style="font-size:13px;color:var(--text-muted);">―</span>'}
+      ${f.vacancyNote ? `<div class="vacancy-note">${f.vacancyNote}</div>` : ''}
+    </div>
+    ` : ''}
+
+    ${f.status !== 'closed' ? `
     <div class="detail-section">
       <div class="section-title">💰 費用情報</div>
       <div class="info-row"><span class="info-label">月額費用目安</span><span class="info-value" style="font-size:12px;">${costStr}</span></div>
@@ -23718,6 +23775,11 @@ function toggleFilter() {
   btn.style.background = isFilterOpen ? 'var(--accent-pale)' : '';
   btn.style.borderColor = isFilterOpen ? 'var(--accent-light)' : '';
   btn.style.color = isFilterOpen ? 'var(--accent)' : '';
+  // パネルを閉じるときにリスト・マップの両方を更新
+  if (!isFilterOpen) {
+    renderList();
+    if (currentView === 'map') updateMapMarkers();
+  }
 }
 
 function setTypeFilter(type, el) {
@@ -23902,6 +23964,22 @@ function openEditSheet(id) {
 
   document.getElementById('edit-sheet-body').innerHTML = `
     <div class="sheet-facility-name">✏️ ${f.name}</div>
+    <div class="field-label">空床状況</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 0 10px;">
+      ${['','available','soon','full'].map(v => {
+        const labels = {'':'未入力','available':'✅ 空きあり','soon':'⏳ 近日空き予定','full':'❌ 満床'};
+        const sel = (f.vacancy||'') === v;
+        return `<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;padding:5px 10px;border-radius:20px;border:1.5px solid ${sel?'var(--accent)':'var(--border)'};background:${sel?'var(--accent-pale)':'var(--surface)'};font-weight:${sel?'700':'400'};">
+          <input type="radio" name="edit-vacancy" value="${v}" ${sel?'checked':''} style="display:none;" onchange="document.getElementById('edit-vacancy-hidden').value=this.value;this.closest('div').querySelectorAll('label').forEach(l=>{const r=l.querySelector('input');l.style.border=r.checked?'1.5px solid var(--accent)':'1.5px solid var(--border)';l.style.background=r.checked?'var(--accent-pale)':'var(--surface)';l.style.fontWeight=r.checked?'700':'400';});">
+          ${labels[v]}
+        </label>`;
+      }).join('')}
+      <input type="hidden" id="edit-vacancy-hidden" value="${f.vacancy||''}">
+    </div>
+    <div style="padding:0 0 10px;">
+      <div class="field-label" style="margin-top:0;">空床メモ（任意）</div>
+      <input type="text" class="field-input" id="edit-vacancyNote" value="${f.vacancyNote||''}" placeholder="例：○月頃に空き予定、○室空きあり" style="width:100%;margin-top:4px;">
+    </div>
     <div class="field-label">費用情報</div>
     <div class="cost-field-row">
       <span class="cost-field-label">月額下限（円）</span>
@@ -23933,6 +24011,16 @@ function closeEditSheetIfBg(e) {
 function saveEdit() {
   const f = FACILITIES.find(x => x.id === memoTargetId);
   if (!f) return;
+
+  // 空床状況
+  const vacancyVal = document.getElementById('edit-vacancy-hidden')?.value || '';
+  const prevVacancy = f.vacancy || '';
+  f.vacancy = vacancyVal;
+  f.vacancyNote = document.getElementById('edit-vacancyNote')?.value || '';
+  if (vacancyVal && vacancyVal !== prevVacancy) {
+    const today2 = new Date();
+    f.vacancyDate = `${today2.getFullYear()}-${String(today2.getMonth()+1).padStart(2,'0')}-${String(today2.getDate()).padStart(2,'0')}`;
+  }
 
   const minVal = document.getElementById('edit-costMin')?.value;
   const maxVal = document.getElementById('edit-costMax')?.value;
@@ -24090,8 +24178,10 @@ function getFilteredForMap() {
     if (currentTypeFilter !== 'all' && currentTypeFilter !== '_closed' && f.type !== currentTypeFilter) return false;
     if (keyword && !normalizeJa(f.name).includes(keyword) && !normalizeJa(f.address).includes(keyword)) return false;
     if (activeWardFilters.length > 0) {
+      const CITY_WARDS = ['東', '西', '南', '北', '中央'];
       const wardMatch = activeWardFilters.some(w => {
         if (f.ward) return f.ward === w;
+        if (CITY_WARDS.includes(w)) return false;
         return f.address && f.address.includes(w);
       });
       if (!wardMatch) return false;
