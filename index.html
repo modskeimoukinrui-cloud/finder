@@ -1199,7 +1199,7 @@
   .vacancy-stale1     { background:#F5F5F5; color:#9E9E9E; }
   .vacancy-stale2     { background:#F5F5F5; color:#BDBDBD; }
   .vacancy-note       { font-size:11px; color:var(--text-secondary); margin-top:2px; }
-  .vacancy-section    { padding:12px 16px; border-bottom:1px solid var(--border); background:var(--surface); }
+  .vacancy-section    { background:var(--surface); margin:8px 12px; border-radius:var(--radius-sm); padding:14px; box-shadow:var(--shadow-sm); }
   .vacancy-section-title { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
   /* ===== ブックマークボタン ===== */
   .bookmark-btn { background:none; border:none; cursor:pointer; font-size:16px; padding:2px 4px; line-height:1; flex-shrink:0; opacity:0.35; transition:opacity 0.15s, transform 0.15s; }
@@ -1429,6 +1429,7 @@
       <button class="tab-btn active" onclick="setSort('name',this)">名前順</button>
       <button class="tab-btn" onclick="setSort('cost',this)">費用順</button>
       <button class="tab-btn" onclick="setSort('memo',this)">新着順</button>
+      <button class="tab-btn" onclick="setSort('vacancy',this)">空床順</button>
     </div>
   </div>
 
@@ -23601,6 +23602,17 @@ function renderList() {
       const aDate = a.timeline.filter(t => !t.sys).slice(-1)[0]?.date ?? '0000-00-00';
       const bDate = b.timeline.filter(t => !t.sys).slice(-1)[0]?.date ?? '0000-00-00';
       return bDate.localeCompare(aDate);
+    });
+  } else if (sortMode === 'vacancy') {
+    const ORDER = { 'available': 0, 'soon': 1, 'full': 2, '': 3 };
+    filtered.sort((a, b) => {
+      const aO = ORDER[a.vacancy || ''] ?? 3;
+      const bO = ORDER[b.vacancy || ''] ?? 3;
+      if (aO !== bO) return aO - bO;
+      // 同じステータス内では確認日が新しい順
+      const aD = vacancyDaysSince(a.vacancyDate) ?? 999;
+      const bD = vacancyDaysSince(b.vacancyDate) ?? 999;
+      return aD - bD;
     });
   }
 
