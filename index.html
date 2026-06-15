@@ -1443,7 +1443,7 @@
       <input type="text" class="cost-input" id="origin-address" placeholder="例：熊本市中央区水前寺6丁目…" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();calcDistances();}">
       <button onclick="calcDistances()" style="flex-shrink:0;padding:7px 14px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-family:'Noto Sans JP',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;">📍 計算</button>
     </div>
-    <div style="font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.5;">※ 住所を入力して「計算」を押すと、各施設までのおおよその直線距離を表示し、近い順に並べ替えます。空欄で計算を押すと解除します。</div>
+    <div style="font-size:10px;color:var(--text-muted);margin-top:5px;line-height:1.6;">※ 住所を入力して「計算」を押すと、各施設までのおおよその直線距離を表示し、近い順に並べ替えます（空欄で計算すると解除）。</div>
     <div class="filter-actions">
       <button class="btn-filter-clear" onclick="clearFilters()">クリア</button>
       <button class="btn-filter-apply" onclick="applyFilters()">この条件で検索</button>
@@ -23233,7 +23233,6 @@ let currentSectionTab = 'all';
 let originCoord = null;
 let originAddress = '';
 const distanceCache = {};
-let distanceCalcRunning = false;
 
 // ブックマーク・閲覧履歴
 const BM_KEY = 'finder_bookmarks';
@@ -23568,6 +23567,7 @@ function normalizeJa(str) {
 // ============================
 //  RENDER LIST
 // ============================
+// リスト用の絞り込み結果を返す共通関数（距離計算からも利用）
 function getMainFilteredList() {
   const rawKeyword = (document.getElementById('main-search').value || '').trim();
   const keyword = normalizeJa(rawKeyword);
@@ -23602,7 +23602,7 @@ function getMainFilteredList() {
 }
 
 // ============================
-//  距離計算（患者宅 → 各施設・直線距離）
+//  距離計算（患者宅 → 各施設の直線距離）
 // ============================
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -23614,12 +23614,14 @@ function haversineKm(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// ソートタブのアクティブ表示を現在のsortModeに同期
 function syncSortTabs() {
   document.querySelectorAll('.tab-btn').forEach(b => {
     b.classList.toggle('active', b.getAttribute('onclick') === "setSort('" + sortMode + "',this)");
   });
 }
 
+let distanceCalcRunning = false;
 async function calcDistances() {
   const inp = document.getElementById('origin-address');
   const addr = (inp ? inp.value : '').trim();
@@ -23630,7 +23632,7 @@ async function calcDistances() {
     Object.keys(distanceCache).forEach(k => delete distanceCache[k]);
     if (sortMode === 'distance') { sortMode = 'name'; syncSortTabs(); }
     renderList();
-    showToast('患者宅住所の距離表示を解除しました');
+    showToast('患者宅住所をクリアしました');
     return;
   }
 
@@ -23657,19 +23659,21 @@ async function calcDistances() {
     return;
   }
 
-  // 距離順に切り替えて一旦描画
+  // 距離順に切り替えて、まず一覧を再描画
   Object.keys(distanceCache).forEach(k => delete distanceCache[k]);
   sortMode = 'distance';
   syncSortTabs();
   renderList();
   showToast('📍 各施設までの距離を計算中…');
 
-  // 表示中の施設の座標を取得して距離を算出（APIに配慮しスロットリング）
+  // 表示中の施設の座標を取得して直線距離を算出（API負荷軽減のためスロットリング）
   const targets = getMainFilteredList();
   for (const f of targets) {
     let c = coordCache[f.id];
     if (!c) c = await fetchCoord(f.id, f.address);
-    if (c) distanceCache[f.id] = haversineKm(originCoord.lat, originCoord.lng, c.lat, c.lng);
+    if (c) {
+      distanceCache[f.id] = haversineKm(originCoord.lat, originCoord.lng, c.lat, c.lng);
+    }
     await new Promise(r => setTimeout(r, 80));
   }
   distanceCalcRunning = false;
@@ -23774,7 +23778,7 @@ function renderList() {
 
     const isBm = bookmarks.includes(f.id);
     const distStr = (originCoord && distanceCache[f.id] != null)
-      ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-pale);padding:2px 8px;border-radius:12px;">📍約${distanceCache[f.id].toFixed(1)}km</span>`
+      ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-pale);padding:2px 8px;border-radius:12px;">📍 約${distanceCache[f.id].toFixed(1)}km</span>`
       : '';
     html += `<div class="facility-card" onclick="showDetail('${f.id}')">
       <div class="card-top">
@@ -23922,13 +23926,13 @@ function toggleFilter() {
   }
 }
 
-// 現在アクティブな絞り込み条件数（行政区・ケア・費用）
+// 設定中の絞り込み条件数（行政区・ケア・費用）
 function countActiveFilters() {
   return activeWardFilters.length + activeCareFilters.length +
     ((costMinFilter !== null || costMaxFilter !== null) ? 1 : 0);
 }
 
-// 絞り込みボタンの見た目を、適用中の条件に応じて更新
+// 絞り込みボタンの見た目を更新：条件設定中は常時アクセント色＋件数バッジ
 function updateFilterButtonState() {
   const btn = document.getElementById('filter-toggle-btn');
   if (!btn) return;
@@ -23988,7 +23992,7 @@ function clearFilters() {
   if (cmin) cmin.value = '';
   if (cmax) cmax.value = '';
   document.querySelectorAll('#filter-panel .filter-tag').forEach(t => t.classList.remove('active'));
-  // 患者宅住所・距離もクリア
+  // 距離（患者宅住所）もクリア
   const oa = document.getElementById('origin-address');
   if (oa) oa.value = '';
   originCoord = null; originAddress = '';
