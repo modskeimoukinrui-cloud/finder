@@ -1224,6 +1224,33 @@
   .list-screen { display:flex; flex-direction:column; }
   .list-screen.hidden { display:none; }
 
+  /* ===== タブレット・PC対応（大画面で横幅を活かす） ===== */
+  @media (min-width: 700px) {
+    .phone-frame { max-width: 720px; }
+    .login-screen { max-width: 460px; }
+    .fab, .fab-detail { right: max(calc(50% - 360px + 24px), 24px); }
+    .memo-sheet, .edit-sheet, .settings-sheet, .admin-sheet { max-width: 540px; }
+  }
+  @media (min-width: 1080px) {
+    .phone-frame { max-width: 1120px; }
+    .fab, .fab-detail { right: max(calc(50% - 560px + 24px), 24px); }
+    .list-content {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      align-content: start;
+    }
+    .list-content .facility-card { margin-bottom: 0; }
+    .list-content .closed-section-header,
+    .list-content .empty-state { grid-column: 1 / -1; }
+    .detail-content { max-width: 760px; margin: 0 auto; width: 100%; }
+  }
+  @media (min-width: 1480px) {
+    .phone-frame { max-width: 1320px; }
+    .fab, .fab-detail { right: max(calc(50% - 660px + 24px), 24px); }
+    .list-content { grid-template-columns: repeat(3, 1fr); }
+  }
+
 </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1411,6 +1438,12 @@
         <input type="number" class="cost-input" id="cost-max" placeholder="例：200000">
       </div>
     </div>
+    <div class="filter-section-title">患者宅からの距離（直線距離）</div>
+    <div style="display:flex;gap:8px;align-items:stretch;">
+      <input type="text" class="cost-input" id="origin-address" placeholder="例：熊本市中央区水前寺6丁目…" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();calcDistances();}">
+      <button onclick="calcDistances()" style="flex-shrink:0;padding:7px 14px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-family:'Noto Sans JP',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;">📍 計算</button>
+    </div>
+    <div style="font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.5;">※ 住所を入力して「計算」を押すと、各施設までのおおよその直線距離を表示し、近い順に並べ替えます。空欄で計算を押すと解除します。</div>
     <div class="filter-actions">
       <button class="btn-filter-clear" onclick="clearFilters()">クリア</button>
       <button class="btn-filter-apply" onclick="applyFilters()">この条件で検索</button>
@@ -1430,6 +1463,7 @@
       <button class="tab-btn" onclick="setSort('cost',this)">費用順</button>
       <button class="tab-btn" onclick="setSort('memo',this)">新着順</button>
       <button class="tab-btn" onclick="setSort('vacancy',this)">空床順</button>
+      <button class="tab-btn" onclick="setSort('distance',this)">距離順</button>
     </div>
   </div>
 
@@ -23195,6 +23229,11 @@ let memoTargetId = null;
 let isFilterOpen = false;
 let sortMode = 'name';
 let currentSectionTab = 'all';
+// 患者宅からの距離（直線距離）用
+let originCoord = null;
+let originAddress = '';
+const distanceCache = {};
+let distanceCalcRunning = false;
 
 // ブックマーク・閲覧履歴
 const BM_KEY = 'finder_bookmarks';
@@ -23529,6 +23568,115 @@ function normalizeJa(str) {
 // ============================
 //  RENDER LIST
 // ============================
+function getMainFilteredList() {
+  const rawKeyword = (document.getElementById('main-search').value || '').trim();
+  const keyword = normalizeJa(rawKeyword);
+  const showClosed = currentTypeFilter === '_closed';
+  return FACILITIES.filter(f => {
+    if (showClosed) return f.status === 'closed';
+    if (f.status === 'closed') return false;
+    if (currentTypeFilter !== 'all' && f.type !== currentTypeFilter) return false;
+    if (keyword && !normalizeJa(f.name).includes(keyword) && !normalizeJa(f.address).includes(keyword)) return false;
+    if (activeWardFilters.length > 0) {
+      const CITY_WARDS = ['東', '西', '南', '北', '中央'];
+      const wardMatch = activeWardFilters.some(w => {
+        if (f.ward) return f.ward === w;
+        if (CITY_WARDS.includes(w)) return false;
+        return f.address && f.address.includes(w);
+      });
+      if (!wardMatch) return false;
+    }
+    if (costMinFilter !== null && f.costMax !== null && f.costMax < costMinFilter) return false;
+    if (costMaxFilter !== null && f.costMin !== null && f.costMin > costMaxFilter) return false;
+    if (activeCareFilters.length > 0) {
+      const careMap = { "生活保護":"seikatsuHogo","看取り":"mitomori","24h看護師":"kango24h","インスリン":"insulin","褥瘡":"jokuso","バルーン":"balloon","胃瘻":"irou","点滴":"tenteki","IVH":"ivh","吸引":"kyuin","酸素":"sanso","気管切開":"kissetsu","人工呼吸器":"kokyuki","透析":"toseki" };
+      for (const label of activeCareFilters) {
+        const key = careMap[label];
+        if (!key) continue;
+        const val = f.care[key] || "";
+        if (!val || val === "×") return false;
+      }
+    }
+    return true;
+  });
+}
+
+// ============================
+//  距離計算（患者宅 → 各施設・直線距離）
+// ============================
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) ** 2 +
+            Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+            Math.sin(dLng/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function syncSortTabs() {
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick') === "setSort('" + sortMode + "',this)");
+  });
+}
+
+async function calcDistances() {
+  const inp = document.getElementById('origin-address');
+  const addr = (inp ? inp.value : '').trim();
+
+  // 空欄なら距離表示を解除
+  if (!addr) {
+    originCoord = null; originAddress = '';
+    Object.keys(distanceCache).forEach(k => delete distanceCache[k]);
+    if (sortMode === 'distance') { sortMode = 'name'; syncSortTabs(); }
+    renderList();
+    showToast('患者宅住所の距離表示を解除しました');
+    return;
+  }
+
+  if (distanceCalcRunning) { showToast('計算中です…少々お待ちください'); return; }
+  distanceCalcRunning = true;
+  showToast('📍 患者宅の位置を取得中…');
+
+  // 患者宅住所をジオコーディング（国土地理院API）
+  try {
+    const url = 'https://msearch.gsi.go.jp/address-search/AddressSearch?q=' + encodeURIComponent(addr);
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data || !data[0] || !data[0].geometry) {
+      distanceCalcRunning = false;
+      showToast('住所が見つかりませんでした');
+      return;
+    }
+    const [lng, lat] = data[0].geometry.coordinates;
+    originCoord = { lat, lng };
+    originAddress = addr;
+  } catch (e) {
+    distanceCalcRunning = false;
+    showToast('距離計算に失敗しました（通信エラー）');
+    return;
+  }
+
+  // 距離順に切り替えて一旦描画
+  Object.keys(distanceCache).forEach(k => delete distanceCache[k]);
+  sortMode = 'distance';
+  syncSortTabs();
+  renderList();
+  showToast('📍 各施設までの距離を計算中…');
+
+  // 表示中の施設の座標を取得して距離を算出（APIに配慮しスロットリング）
+  const targets = getMainFilteredList();
+  for (const f of targets) {
+    let c = coordCache[f.id];
+    if (!c) c = await fetchCoord(f.id, f.address);
+    if (c) distanceCache[f.id] = haversineKm(originCoord.lat, originCoord.lng, c.lat, c.lng);
+    await new Promise(r => setTimeout(r, 80));
+  }
+  distanceCalcRunning = false;
+  renderList();
+  showToast('✅ 直線距離の計算が完了しました');
+}
+
 function renderList() {
   const rawKeyword = (document.getElementById('main-search').value || '').trim();
   const keyword = normalizeJa(rawKeyword);
@@ -23559,34 +23707,7 @@ function renderList() {
     return;
   }
 
-  let filtered = FACILITIES.filter(f => {
-    if (showClosed) return f.status === 'closed';
-    if (f.status === 'closed') return false;
-    if (currentTypeFilter !== 'all' && f.type !== currentTypeFilter) return false;
-    if (keyword && !normalizeJa(f.name).includes(keyword) && !normalizeJa(f.address).includes(keyword)) return false;
-    if (activeWardFilters.length > 0) {
-      const CITY_WARDS = ['東', '西', '南', '北', '中央'];
-      const wardMatch = activeWardFilters.some(w => {
-        if (f.ward) return f.ward === w;
-        // 熊本市5区の選択肢はwardが空の施設にはマッチさせない
-        if (CITY_WARDS.includes(w)) return false;
-        return f.address && f.address.includes(w);
-      });
-      if (!wardMatch) return false;
-    }
-    if (costMinFilter !== null && f.costMax !== null && f.costMax < costMinFilter) return false;
-    if (costMaxFilter !== null && f.costMin !== null && f.costMin > costMaxFilter) return false;
-    if (activeCareFilters.length > 0) {
-      const careMap = { "生活保護":"seikatsuHogo","看取り":"mitomori","24h看護師":"kango24h","インスリン":"insulin","褥瘡":"jokuso","バルーン":"balloon","胃瘻":"irou","点滴":"tenteki","IVH":"ivh","吸引":"kyuin","酸素":"sanso","気管切開":"kissetsu","人工呼吸器":"kokyuki","透析":"toseki" };
-      for (const label of activeCareFilters) {
-        const key = careMap[label];
-        if (!key) continue;
-        const val = f.care[key] || "";
-        if (!val || val === "×") return false;
-      }
-    }
-    return true;
-  });
+  let filtered = getMainFilteredList();
 
   // ---- ソート ----
   if (sortMode === 'name') {
@@ -23614,6 +23735,12 @@ function renderList() {
       const bD = vacancyDaysSince(b.vacancyDate) ?? 999;
       return aD - bD;
     });
+  } else if (sortMode === 'distance') {
+    filtered.sort((a, b) => {
+      const da = distanceCache[a.id] ?? Infinity;
+      const db = distanceCache[b.id] ?? Infinity;
+      return da - db;
+    });
   }
 
   document.getElementById('result-count-num').textContent = filtered.length;
@@ -23630,7 +23757,7 @@ function renderList() {
   filtered.forEach(f => {
     const lastMemo = f.timeline.filter(t => !t.sys).slice(-1)[0];
     const memoCount = f.timeline.filter(t => !t.sys).length;
-    const activeCare = Object.entries(f.care || {}).filter(([k,v]) => v && v !== '×' && v !== '');
+    const activeCare = Object.entries(f.care || {}).filter(([k,v]) => v && v !== '×' && v !== '' && v !== '要相談');
     const consultCare = Object.entries(f.care || {}).filter(([k,v]) => v === '要相談');
     let costStr;
     if (f.monthlyFeeRaw) {
@@ -23646,6 +23773,9 @@ function renderList() {
       consultCare.slice(0,2).map(([k]) => `<span class="care-tag care-tag-amber">${CARE_LABELS[k]}▲</span>`).join('');
 
     const isBm = bookmarks.includes(f.id);
+    const distStr = (originCoord && distanceCache[f.id] != null)
+      ? `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-pale);padding:2px 8px;border-radius:12px;">📍約${distanceCache[f.id].toFixed(1)}km</span>`
+      : '';
     html += `<div class="facility-card" onclick="showDetail('${f.id}')">
       <div class="card-top">
         <div class="facility-name">${f.status==='closed'?'<span style="opacity:.6">'+f.name+'</span>':f.name}</div>
@@ -23653,6 +23783,7 @@ function renderList() {
         <span class="type-badge type-${f.type}">${f.type}</span>
       </div>
       <div class="card-addr">📍 ${f.address}</div>
+      ${distStr ? `<div style="padding:2px 0 0;">${distStr}</div>` : ''}
       ${renderVacancyBadge(f) ? `<div style="padding:4px 0 2px 0;">${renderVacancyBadge(f)}</div>` : ''}
       <div class="card-meta">
         <div class="care-tags">${f.status==='closed'?'<span class="closed-badge">⛔ 廃止 '+f.closedDate+'</span>':careTags}</div>
@@ -23783,14 +23914,40 @@ function showDetail(id) {
 function toggleFilter() {
   isFilterOpen = !isFilterOpen;
   document.getElementById('filter-panel').classList.toggle('open', isFilterOpen);
-  const btn = document.getElementById('filter-toggle-btn');
-  btn.style.background = isFilterOpen ? 'var(--accent-pale)' : '';
-  btn.style.borderColor = isFilterOpen ? 'var(--accent-light)' : '';
-  btn.style.color = isFilterOpen ? 'var(--accent)' : '';
+  updateFilterButtonState();
   // パネルを閉じるときにリスト・マップの両方を更新
   if (!isFilterOpen) {
     renderList();
     if (currentView === 'map') updateMapMarkers();
+  }
+}
+
+// 現在アクティブな絞り込み条件数（行政区・ケア・費用）
+function countActiveFilters() {
+  return activeWardFilters.length + activeCareFilters.length +
+    ((costMinFilter !== null || costMaxFilter !== null) ? 1 : 0);
+}
+
+// 絞り込みボタンの見た目を、適用中の条件に応じて更新
+function updateFilterButtonState() {
+  const btn = document.getElementById('filter-toggle-btn');
+  if (!btn) return;
+  const n = countActiveFilters();
+  if (n > 0) {
+    btn.style.background = 'var(--accent)';
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.color = 'white';
+    btn.innerHTML = '⚙️ 絞り込み中（' + n + '）';
+  } else if (isFilterOpen) {
+    btn.style.background = 'var(--accent-pale)';
+    btn.style.borderColor = 'var(--accent-light)';
+    btn.style.color = 'var(--accent)';
+    btn.innerHTML = '⚙️ 絞り込み';
+  } else {
+    btn.style.background = 'var(--bg)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--text-secondary)';
+    btn.innerHTML = '⚙️ 絞り込み';
   }
 }
 
@@ -23831,6 +23988,13 @@ function clearFilters() {
   if (cmin) cmin.value = '';
   if (cmax) cmax.value = '';
   document.querySelectorAll('#filter-panel .filter-tag').forEach(t => t.classList.remove('active'));
+  // 患者宅住所・距離もクリア
+  const oa = document.getElementById('origin-address');
+  if (oa) oa.value = '';
+  originCoord = null; originAddress = '';
+  Object.keys(distanceCache).forEach(k => delete distanceCache[k]);
+  if (sortMode === 'distance') { sortMode = 'name'; syncSortTabs(); }
+  updateFilterButtonState();
   renderList();
 }
 
