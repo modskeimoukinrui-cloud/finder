@@ -901,17 +901,17 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-width: 390px;
-    margin: 0 auto;
     overflow-y: auto;
   }
   .login-screen.hidden { display: none; }
   .login-hero {
     width: 100%;
+    max-width: 460px;
     background: var(--accent);
     padding: 48px 24px 32px;
     text-align: center;
     color: white;
+    border-radius: 0 0 24px 24px;
   }
   .login-logo {
     font-family: 'DM Sans', sans-serif;
@@ -927,6 +927,7 @@
   }
   .login-body {
     width: 100%;
+    max-width: 460px;
     padding: 24px 20px 40px;
     display: flex;
     flex-direction: column;
@@ -1227,7 +1228,6 @@
   /* ===== タブレット・PC対応（大画面で横幅を活かす） ===== */
   @media (min-width: 700px) {
     .phone-frame { max-width: 720px; }
-    .login-screen { max-width: 460px; }
     .fab, .fab-detail { right: max(calc(50% - 360px + 24px), 24px); }
     .memo-sheet, .edit-sheet, .settings-sheet, .admin-sheet { max-width: 540px; }
   }
@@ -1459,11 +1459,11 @@
   <div class="result-bar">
     <div class="result-count">検索結果：<strong id="result-count-num">15</strong>件</div>
     <div class="tab-group">
-      <button class="tab-btn active" onclick="setSort('name',this)">名前順</button>
-      <button class="tab-btn" onclick="setSort('cost',this)">費用順</button>
-      <button class="tab-btn" onclick="setSort('memo',this)">新着順</button>
-      <button class="tab-btn" onclick="setSort('vacancy',this)">空床順</button>
-      <button class="tab-btn" onclick="setSort('distance',this)">距離順</button>
+      <button class="tab-btn active" id="tab-name"     data-label="名前順" onclick="setSort('name',this)">名前順 ↑</button>
+      <button class="tab-btn"        id="tab-cost"     data-label="費用順" onclick="setSort('cost',this)">費用順</button>
+      <button class="tab-btn"        id="tab-memo"     data-label="新着順" onclick="setSort('memo',this)">新着順</button>
+      <button class="tab-btn"        id="tab-vacancy"  data-label="空床順" onclick="setSort('vacancy',this)">空床順</button>
+      <button class="tab-btn"        id="tab-distance" data-label="距離順" onclick="setSort('distance',this)">距離順</button>
     </div>
   </div>
 
@@ -23228,6 +23228,7 @@ let currentFacilityId = null;
 let memoTargetId = null;
 let isFilterOpen = false;
 let sortMode = 'name';
+let sortDir = 1; // 1=昇順(デフォルト) / -1=降順
 let currentSectionTab = 'all';
 // 患者宅からの距離（直線距離）用
 let originCoord = null;
@@ -23614,10 +23615,18 @@ function haversineKm(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// ソートタブのアクティブ表示を現在のsortModeに同期
+// ソートタブのアクティブ表示・矢印を現在のsortMode/sortDirに同期
 function syncSortTabs() {
+  const modeToId = { name:'tab-name', cost:'tab-cost', memo:'tab-memo', vacancy:'tab-vacancy', distance:'tab-distance' };
   document.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.toggle('active', b.getAttribute('onclick') === "setSort('" + sortMode + "',this)");
+    const isActive = b.id === modeToId[sortMode];
+    b.classList.toggle('active', isActive);
+    const label = b.dataset.label || b.textContent.replace(/[↑↓]/g,'').trim();
+    if (isActive) {
+      b.textContent = label + (sortDir === 1 ? ' ↑' : ' ↓');
+    } else {
+      b.textContent = label;
+    }
   });
 }
 
@@ -23630,7 +23639,7 @@ async function calcDistances() {
   if (!addr) {
     originCoord = null; originAddress = '';
     Object.keys(distanceCache).forEach(k => delete distanceCache[k]);
-    if (sortMode === 'distance') { sortMode = 'name'; syncSortTabs(); }
+    if (sortMode === 'distance') { sortMode = 'name'; sortDir = 1; syncSortTabs(); }
     renderList();
     showToast('患者宅住所をクリアしました');
     return;
@@ -23715,25 +23724,29 @@ function renderList() {
 
   // ---- ソート ----
   if (sortMode === 'name') {
-    filtered.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+    filtered.sort((a, b) => a.name.localeCompare(b.name, 'ja') * sortDir);
   } else if (sortMode === 'cost') {
     filtered.sort((a, b) => {
-      const aMin = a.costMin ?? Infinity;
-      const bMin = b.costMin ?? Infinity;
-      return aMin - bMin;
+      const aUnknown = !a.costMin;  // 0 または null/undefined → 不明扱い
+      const bUnknown = !b.costMin;
+      // 不明は常に末尾（sortDirに関わらず）
+      if (aUnknown && bUnknown) return 0;
+      if (aUnknown) return 1;
+      if (bUnknown) return -1;
+      return (a.costMin - b.costMin) * sortDir;
     });
   } else if (sortMode === 'memo') {
     filtered.sort((a, b) => {
       const aDate = a.timeline.filter(t => !t.sys).slice(-1)[0]?.date ?? '0000-00-00';
       const bDate = b.timeline.filter(t => !t.sys).slice(-1)[0]?.date ?? '0000-00-00';
-      return bDate.localeCompare(aDate);
+      return bDate.localeCompare(aDate) * sortDir;
     });
   } else if (sortMode === 'vacancy') {
     const ORDER = { 'available': 0, 'soon': 1, 'full': 2, '': 3 };
     filtered.sort((a, b) => {
       const aO = ORDER[a.vacancy || ''] ?? 3;
       const bO = ORDER[b.vacancy || ''] ?? 3;
-      if (aO !== bO) return aO - bO;
+      if (aO !== bO) return (aO - bO) * sortDir;
       // 同じステータス内では確認日が新しい順
       const aD = vacancyDaysSince(a.vacancyDate) ?? 999;
       const bD = vacancyDaysSince(b.vacancyDate) ?? 999;
@@ -23743,7 +23756,7 @@ function renderList() {
     filtered.sort((a, b) => {
       const da = distanceCache[a.id] ?? Infinity;
       const db = distanceCache[b.id] ?? Infinity;
-      return da - db;
+      return (da - db) * sortDir;
     });
   }
 
@@ -23997,16 +24010,22 @@ function clearFilters() {
   if (oa) oa.value = '';
   originCoord = null; originAddress = '';
   Object.keys(distanceCache).forEach(k => delete distanceCache[k]);
-  if (sortMode === 'distance') { sortMode = 'name'; syncSortTabs(); }
+  if (sortMode === 'distance') { sortMode = 'name'; sortDir = 1; syncSortTabs(); }
   updateFilterButtonState();
   renderList();
 }
 
 function doSearch() { renderList(); if(currentView==="map") updateMapMarkers(); }
 function setSort(mode, el) {
-  sortMode = mode;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
+  if (sortMode === mode) {
+    // 同じタブを再タップ → 方向反転
+    sortDir = sortDir === 1 ? -1 : 1;
+  } else {
+    // 別タブ → モード切替、方向リセット
+    sortMode = mode;
+    sortDir = 1;
+  }
+  syncSortTabs();
   renderList();
 }
 
