@@ -23555,6 +23555,7 @@ const CARE_LABELS = {
 //  日本語正規化（ひらがな↔カタカナ・全角↔半角を統一）
 // ============================
 function normalizeJa(str) {
+  if (!str) return '';
   return str
     // カタカナ→ひらがな
     .replace(/[\u30A1-\u30F6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60))
@@ -23587,8 +23588,8 @@ function getMainFilteredList() {
       });
       if (!wardMatch) return false;
     }
-    if (costMinFilter !== null && f.costMax !== null && f.costMax < costMinFilter) return false;
-    if (costMaxFilter !== null && f.costMin !== null && f.costMin > costMaxFilter) return false;
+    if (costMinFilter !== null && f.costMax && f.costMax < costMinFilter) return false;
+    if (costMaxFilter !== null && f.costMin && f.costMin > costMaxFilter) return false;
     if (activeCareFilters.length > 0) {
       const careMap = { "生活保護":"seikatsuHogo","看取り":"mitomori","24h看護師":"kango24h","インスリン":"insulin","褥瘡":"jokuso","バルーン":"balloon","胃瘻":"irou","点滴":"tenteki","IVH":"ivh","吸引":"kyuin","酸素":"sanso","気管切開":"kissetsu","人工呼吸器":"kokyuki","透析":"toseki" };
       for (const label of activeCareFilters) {
@@ -23677,15 +23678,18 @@ async function calcDistances() {
 
   // 表示中の施設の座標を取得して直線距離を算出（API負荷軽減のためスロットリング）
   const targets = getMainFilteredList();
-  for (const f of targets) {
-    let c = coordCache[f.id];
-    if (!c) c = await fetchCoord(f.id, f.address);
-    if (c) {
-      distanceCache[f.id] = haversineKm(originCoord.lat, originCoord.lng, c.lat, c.lng);
+  try {
+    for (const f of targets) {
+      let c = coordCache[f.id];
+      if (!c) c = await fetchCoord(f.id, f.address);
+      if (c) {
+        distanceCache[f.id] = haversineKm(originCoord.lat, originCoord.lng, c.lat, c.lng);
+      }
+      await new Promise(r => setTimeout(r, 80));
     }
-    await new Promise(r => setTimeout(r, 80));
+  } finally {
+    distanceCalcRunning = false;
   }
-  distanceCalcRunning = false;
   renderList();
   showToast('✅ 直線距離の計算が完了しました');
 }
@@ -24004,6 +24008,9 @@ function clearFilters() {
   const cmax = document.getElementById('cost-max');
   if (cmin) cmin.value = '';
   if (cmax) cmax.value = '';
+  // 施設名・住所キーワード検索もクリア
+  const ms = document.getElementById('main-search');
+  if (ms) ms.value = '';
   document.querySelectorAll('#filter-panel .filter-tag').forEach(t => t.classList.remove('active'));
   // 距離（患者宅住所）もクリア
   const oa = document.getElementById('origin-address');
