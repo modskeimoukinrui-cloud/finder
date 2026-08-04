@@ -24213,8 +24213,14 @@ async function postMemo() {
   showToast('✅ メモを投稿しました');
   const targetId = memoTargetId;
   await postTimelineToGAS({ 施設ID: f.id, author, date: dateStr, text });
-  if (currentFacilityId === targetId) showDetail(targetId);
-  else renderList();
+  // no-corsではPOSTの完了タイミングしか分からず、GAS側（スプレッドシート）への反映に
+  // 多少ラグが出ることがあるため、1秒待ってから最新タイムラインを取得し直す
+  if (currentFacilityId === targetId) {
+    renderDetailScreen(f);
+    setTimeout(() => refreshTimelineFromGAS(targetId), 1000);
+  } else {
+    renderList();
+  }
 }
 
 // ============================
@@ -24484,16 +24490,20 @@ async function fetchTimelineFromGAS(facilityId) {
   }
 }
 
-// タイムライン投稿をGASに送信する
+// タイムライン投稿をGASに送信する。
+// GASのPOSTはリダイレクトを伴う仕様のため redirect:'follow' を明示し、
+// CORSエラー（Failed to load response data）を避けるため mode:'no-cors' で送信する。
+// no-corsではレスポンス本文を読めない＝成否を判定できないため、呼び出し側で
+// 一定時間待ってからrefreshTimelineFromGAS()で再取得して結果を確認する運用とする。
 async function postTimelineToGAS(payload) {
   try {
-    const res = await fetch(GAS_URL, {
+    await fetch(GAS_URL, {
       method: 'POST',
+      mode: 'no-cors',
+      redirect: 'follow',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'postTimeline', ...payload }),
     });
-    const data = await res.json();
-    if (data && data.error) throw new Error(data.error);
     return true;
   } catch (e) {
     console.warn('GAS timeline投稿に失敗:', e);
