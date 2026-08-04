@@ -24188,7 +24188,13 @@ function closeMemoSheet() {
   document.getElementById('memo-overlay').classList.remove('open');
 }
 function closeMemoSheetIfBg(e) {
-  if (e.target === document.getElementById('memo-overlay')) closeMemoSheet();
+  const overlay = document.getElementById('memo-overlay');
+  if (e.target !== overlay) return;
+  // 入力中（テキストエリア/入力欄にフォーカスがある状態）は、スワイプやIME操作による
+  // 誤タップ・意図しないクリックイベントで閉じてしまわないようガードする
+  const active = document.activeElement;
+  if (active && overlay.contains(active) && (active.tagName === 'TEXTAREA' || active.tagName === 'INPUT')) return;
+  closeMemoSheet();
 }
 
 async function postMemo() {
@@ -24407,11 +24413,19 @@ function normalizeFacilityFromApi(row) {
   };
 }
 
-// 正規化後のデータでFACILITIESを置き換える。想定と違う形式（半数以上が無効）なら置き換えない。
+// 正規化後のデータでFACILITIESを置き換える。想定と違う形式（半数以上が無効、またはidが重複だらけ）なら置き換えない。
 function applyFacilitiesFromApi(rawArray) {
   if (!Array.isArray(rawArray) || rawArray.length === 0) return false;
   const normalized = rawArray.map(normalizeFacilityFromApi).filter(Boolean);
   if (normalized.length < rawArray.length * 0.5) return false;
+
+  // GAS側のID列マッピングが壊れていると全件同一idになる不具合があったため、
+  // idの一意性が著しく低い場合はデータ破損とみなしてフォールバックする
+  const uniqueIdCount = new Set(normalized.map(f => f.id)).size;
+  if (uniqueIdCount < normalized.length * 0.5) {
+    console.warn('GAS facilitiesのidに重複が多すぎるため、ローカルFACILITIESを使用します');
+    return false;
+  }
 
   // 静的に埋め込まれたsys（🔔）タイムラインはフォールバックデータから引き継ぐ
   normalized.forEach(f => {
