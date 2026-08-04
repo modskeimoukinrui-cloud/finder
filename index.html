@@ -904,6 +904,40 @@
     overflow-y: auto;
   }
   .login-screen.hidden { display: none; }
+
+  /* ========== LOADING SCREEN ========== */
+  .loading-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .loading-screen.hidden { display: none; }
+  .loading-logo {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: loading-spin 0.8s linear infinite;
+  }
+  .loading-text {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  @keyframes loading-spin { to { transform: rotate(360deg); } }
   .login-hero {
     width: 100%;
     max-width: 460px;
@@ -1258,8 +1292,15 @@
 <body>
 <div class="phone-frame">
 
+<!-- ===== LOADING SCREEN ===== -->
+<div id="loading-screen" class="loading-screen">
+  <div class="loading-logo">finder</div>
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">施設データを取得しています…</div>
+</div>
+
 <!-- ===== LOGIN SCREEN ===== -->
-<div id="login-screen" class="login-screen">
+<div id="login-screen" class="login-screen hidden">
   <div class="login-hero">
     <div class="login-logo">finder</div>
     <div class="login-tagline">介護施設情報　共有・検索アプリ</div>
@@ -1557,7 +1598,7 @@
 // ============================
 //  REAL DATA (from Google Sheets)
 // ============================
-const FACILITIES = [
+let FACILITIES = [
   {
     "id": "F0001",
     "name": "シニアマンションユートピア熊本",
@@ -23216,6 +23257,10 @@ const FACILITIES = [
     "lng": null
   }
 ];
+
+// 元データのフォールバック用コピー（GAS取得失敗時に使用）
+const FACILITIES_FALLBACK = FACILITIES;
+
 // ============================
 //  STATE
 // ============================
@@ -23842,11 +23887,15 @@ function showDetail(id) {
   if (!f) return;
   addHistory(id);
   currentFacilityId = id;
+  renderDetailScreen(f);
+  refreshTimelineFromGAS(id);
+}
 
+function renderDetailScreen(f) {
   // ブックマークボタンの状態反映
   const bmBtn = document.getElementById('detail-bm-btn');
   const bms = loadBookmarks();
-  if (bms.includes(id)) { bmBtn.textContent = '⭐'; bmBtn.classList.add('active'); bmBtn.style.opacity='1'; }
+  if (bms.includes(f.id)) { bmBtn.textContent = '⭐'; bmBtn.classList.add('active'); bmBtn.style.opacity='1'; }
   else { bmBtn.textContent = '☆'; bmBtn.classList.remove('active'); bmBtn.style.opacity='0.4'; }
 
   document.getElementById('detail-name').textContent = f.name;
@@ -23927,6 +23976,18 @@ function showDetail(id) {
   `;
 
   showScreen('detail');
+}
+
+// GASからタイムラインを取得し、まだ同じ施設を表示中であれば再描画する
+async function refreshTimelineFromGAS(id) {
+  const data = await fetchTimelineFromGAS(id);
+  if (!data || currentFacilityId !== id) return;
+  const f = FACILITIES.find(x => x.id === id);
+  if (!f) return;
+  const sysList = f.timeline.filter(t => t.sys);
+  const userList = data.map(normalizeTimelineEntryFromApi).filter(Boolean);
+  f.timeline = [...sysList, ...userList];
+  renderDetailScreen(f);
 }
 
 // ============================
@@ -24130,7 +24191,7 @@ function closeMemoSheetIfBg(e) {
   if (e.target === document.getElementById('memo-overlay')) closeMemoSheet();
 }
 
-function postMemo() {
+async function postMemo() {
   const text = document.getElementById('memo-text').value.trim();
   const author = currentUser;
   if (!text) { showToast('内容を入力してください'); return; }
@@ -24144,7 +24205,9 @@ function postMemo() {
   saveTimeline(f.id, f.timeline);
   closeMemoSheet();
   showToast('✅ メモを投稿しました');
-  if (currentFacilityId === memoTargetId) showDetail(memoTargetId);
+  const targetId = memoTargetId;
+  await postTimelineToGAS({ 施設ID: f.id, author, date: dateStr, text });
+  if (currentFacilityId === targetId) showDetail(targetId);
   else renderList();
 }
 
@@ -24275,6 +24338,141 @@ function showToast(msg) {
 
 
 // ============================
+//  GAS API 連携
+// ============================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxkREpXkOHGxnc7WyMfdf7cDDWcuPbyiIt4d0zBkOCw9JHFm-5Jq6aPS0ePJ5BHpa0/exec';
+
+// GASから返ってくる行データ（シート①+②マージ）を、アプリ内部で使うFACILITIESの形に正規化する。
+// 実際のシート列名がキャメルケース／日本語どちらでも拾えるよう候補キーを複数試す。
+function normalizeFacilityFromApi(row) {
+  const pick = (...keys) => {
+    for (const k of keys) {
+      if (row[k] !== undefined && row[k] !== null && row[k] !== '') return row[k];
+    }
+    return '';
+  };
+  const id = pick('id', '施設ID', 'ID');
+  const name = pick('name', '施設名', '名称');
+  if (!id || !name) return null;
+
+  const toNum = (v) => {
+    if (v === '' || v === null || v === undefined) return null;
+    const n = parseInt(String(v).replace(/[^0-9]/g, ''), 10);
+    return isNaN(n) ? null : n;
+  };
+
+  const care = {};
+  Object.keys(CARE_LABELS).forEach(key => {
+    care[key] = pick(key, CARE_LABELS[key]) || '';
+  });
+
+  return {
+    id: String(id),
+    name: String(name),
+    type: pick('type', '施設類型', '類型') || '',
+    ward: pick('ward', '行政区', '区') || '',
+    address: pick('address', '住所') || '',
+    tel: pick('tel', '電話番号', '電話') || '-',
+    status: pick('status', '状態') || 'active',
+    care,
+    costMin: toNum(pick('costMin', '費用下限', '最低費用')),
+    costMax: toNum(pick('costMax', '費用上限', '最高費用')),
+    monthlyFeeRaw: pick('monthlyFeeRaw', '月額費用目安', '月額費用') || '',
+    nyukyoFee: pick('nyukyoFee', '入居費用') || '',
+    costNote: pick('costNote', '費用備考', '信頼性・特記') || '',
+    lastUpdated: pick('lastUpdated', '最終更新日') || '',
+    lastUpdater: pick('lastUpdater', '更新者') || '',
+    inheritNote: pick('inheritNote', '引継ぎ備考') || '',
+    timeline: [],
+    zip: pick('zip', '郵便番号') || '',
+    lat: row.lat ? parseFloat(row.lat) : null,
+    lng: row.lng ? parseFloat(row.lng) : null,
+    closedDate: pick('closedDate', '閉鎖日') || '',
+    vacancyNote: pick('vacancyNote', '空床備考') || ''
+  };
+}
+
+// 正規化後のデータでFACILITIESを置き換える。想定と違う形式（半数以上が無効）なら置き換えない。
+function applyFacilitiesFromApi(rawArray) {
+  if (!Array.isArray(rawArray) || rawArray.length === 0) return false;
+  const normalized = rawArray.map(normalizeFacilityFromApi).filter(Boolean);
+  if (normalized.length < rawArray.length * 0.5) return false;
+
+  // 静的に埋め込まれたsys（🔔）タイムラインはフォールバックデータから引き継ぐ
+  normalized.forEach(f => {
+    const fb = FACILITIES_FALLBACK.find(x => x.id === f.id);
+    if (fb) f.timeline = fb.timeline.filter(t => t.sys);
+  });
+
+  FACILITIES = normalized;
+  return true;
+}
+
+// 起動時：施設マスター＋詳細をGASから取得してFACILITIESを置き換える。失敗時は既存のFACILITIES（フォールバック）を使う。
+async function fetchFacilitiesFromGAS() {
+  try {
+    const res = await fetch(`${GAS_URL}?action=facilities`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data && data.error) throw new Error(data.error);
+    const ok = applyFacilitiesFromApi(data);
+    if (!ok) console.warn('GAS facilitiesのデータ形式が想定と異なるため、ローカルFACILITIESを使用します');
+  } catch (e) {
+    console.warn('GAS facilities取得に失敗、ローカルFACILITIESにフォールバックします:', e);
+  }
+}
+
+// GASの口コミ・タイムライン行を、アプリ内部で使うtimelineエントリの形に正規化する
+function normalizeTimelineEntryFromApi(row) {
+  const pick = (...keys) => {
+    for (const k of keys) {
+      if (row[k] !== undefined && row[k] !== null && row[k] !== '') return row[k];
+    }
+    return '';
+  };
+  const text = pick('text', '内容', '本文', 'コメント');
+  if (!text) return null;
+  return {
+    author: pick('author', '投稿者', '氏名') || '',
+    date: pick('date', '投稿日時', '日付') || '',
+    text: String(text),
+    hasPhoto: !!pick('hasPhoto', '写真'),
+  };
+}
+
+// 施設詳細を開いたときにタイムラインをGASから取得し、該当施設のtimelineを更新する
+async function fetchTimelineFromGAS(facilityId) {
+  try {
+    const res = await fetch(`${GAS_URL}?action=timeline&id=${encodeURIComponent(facilityId)}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data && data.error) throw new Error(data.error);
+    if (!Array.isArray(data)) return null;
+    return data;
+  } catch (e) {
+    console.warn('GAS timeline取得に失敗:', facilityId, e);
+    return null;
+  }
+}
+
+// タイムライン投稿をGASに送信する
+async function postTimelineToGAS(payload) {
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'postTimeline', ...payload }),
+    });
+    const data = await res.json();
+    if (data && data.error) throw new Error(data.error);
+    return true;
+  } catch (e) {
+    console.warn('GAS timeline投稿に失敗:', e);
+    return false;
+  }
+}
+
+// ============================
 //  TIMELINE LOCALSTORAGE
 // ============================
 const TL_PREFIX = 'finder_tl_';
@@ -24307,18 +24505,25 @@ function loadAllTimelines() {
 // ============================
 //  INIT
 // ============================
-loadAllTimelines();
-loadCoordCache();
-initLoginScreen();
-if (currentUser) {
-  // 前回ログイン済み：そのままアプリを表示
-  document.getElementById('login-screen').classList.add('hidden');
-  updateHeaderUser();
-  renderList();
-} else {
-  // 未ログイン：ログイン画面を表示
-  document.getElementById('login-screen').classList.remove('hidden');
+async function initApp() {
+  await fetchFacilitiesFromGAS();
+  loadAllTimelines();
+  loadCoordCache();
+  initLoginScreen();
+
+  document.getElementById('loading-screen').classList.add('hidden');
+
+  if (currentUser) {
+    // 前回ログイン済み：そのままアプリを表示
+    document.getElementById('login-screen').classList.add('hidden');
+    updateHeaderUser();
+    renderList();
+  } else {
+    // 未ログイン：ログイン画面を表示
+    document.getElementById('login-screen').classList.remove('hidden');
+  }
 }
+initApp();
 
 // ============================
 //  MAP VIEW  (国土地理院ジオコーダ版)
