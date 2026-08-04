@@ -24464,21 +24464,28 @@ async function fetchFacilitiesFromGAS() {
   }
 }
 
-// GASの口コミ・タイムライン行を、アプリ内部で使うtimelineエントリの形に正規化する
+// GASの口コミ・タイムライン行を、アプリ内部で使うtimelineエントリの形に正規化する。
+// ③口コミ・タイムラインシートの実列名：投稿ID / 施設固有ID / 投稿テキスト / 投稿者名 / 確認年月日 / 写真URL
 function normalizeTimelineEntryFromApi(row) {
-  const pick = (...keys) => {
-    for (const k of keys) {
-      if (row[k] !== undefined && row[k] !== null && row[k] !== '') return row[k];
-    }
-    return '';
-  };
-  const text = pick('text', '投稿テキスト', '内容', '本文', 'コメント');
+  const text = row['投稿テキスト'];
   if (!text) return null;
+
+  // 確認年月日はDateオブジェクトがISO文字列化されて返る（例: "2026-08-04T07:00:00.000Z"）。
+  // 先頭10文字（YYYY-MM-DD）だけを取り出す。
+  const rawDate = row['確認年月日'];
+  const dateStr = typeof rawDate === 'string' ? rawDate.slice(0, 10) : '';
+
+  const photo = row['写真URL'] || '';
+
   return {
-    author: pick('author', '投稿者名', '投稿者', '氏名') || '',
-    date: pick('date', '確認年月日', '投稿日時', '日付') || '',
+    id: row['投稿ID'] || '',
+    facilityId: row['施設固有ID'] || '',
+    author: row['投稿者名'] || '',
+    date: dateStr,
+    dateStr,
     text: String(text),
-    hasPhoto: !!pick('hasPhoto', '写真URL', '写真'),
+    photo,
+    hasPhoto: !!photo,
   };
 }
 
