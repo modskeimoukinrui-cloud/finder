@@ -24342,8 +24342,14 @@ function showToast(msg) {
 // ============================
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxkREpXkOHGxnc7WyMfdf7cDDWcuPbyiIt4d0zBkOCw9JHFm-5Jq6aPS0ePJ5BHpa0/exec';
 
+// ケア項目キー(内部) → 実際のGASシートの列見出し（改行含む）
+const CARE_GAS_LABELS = {
+  kango24h: '24時間\n看護師',
+  kokyuki: '人工\n呼吸器',
+};
+
 // GASから返ってくる行データ（シート①+②マージ）を、アプリ内部で使うFACILITIESの形に正規化する。
-// 実際のシート列名がキャメルケース／日本語どちらでも拾えるよう候補キーを複数試す。
+// 実際のシート列名（一部改行文字入り）に合わせて候補キーを複数試す。
 function normalizeFacilityFromApi(row) {
   const pick = (...keys) => {
     for (const k of keys) {
@@ -24351,7 +24357,7 @@ function normalizeFacilityFromApi(row) {
     }
     return '';
   };
-  const id = pick('id', '施設ID', 'ID');
+  const id = pick('id', '施設ID', 'ID', '施設固有ID\n【変更禁止】', '施設固有ID');
   const name = pick('name', '施設名', '名称');
   if (!id || !name) return null;
 
@@ -24361,32 +24367,41 @@ function normalizeFacilityFromApi(row) {
     return isNaN(n) ? null : n;
   };
 
+  const toFloat = (v) => {
+    if (v === '' || v === null || v === undefined) return null;
+    const n = parseFloat(v);
+    return isNaN(n) ? null : n;
+  };
+
   const care = {};
   Object.keys(CARE_LABELS).forEach(key => {
-    care[key] = pick(key, CARE_LABELS[key]) || '';
+    care[key] = pick(key, CARE_LABELS[key], CARE_GAS_LABELS[key]) || '';
   });
+
+  const statusRaw = pick('status', '状態', '運用ステータス\n（運用中／廃止）', '運用ステータス');
+  const status = statusRaw.includes('廃止') ? 'closed' : 'active';
 
   return {
     id: String(id),
     name: String(name),
     type: pick('type', '施設類型', '類型') || '',
     ward: pick('ward', '行政区', '区') || '',
-    address: pick('address', '住所') || '',
+    address: pick('address', '住所', '所在地') || '',
     tel: pick('tel', '電話番号', '電話') || '-',
-    status: pick('status', '状態') || 'active',
+    status,
     care,
     costMin: toNum(pick('costMin', '費用下限', '最低費用')),
     costMax: toNum(pick('costMax', '費用上限', '最高費用')),
     monthlyFeeRaw: pick('monthlyFeeRaw', '月額費用目安', '月額費用') || '',
-    nyukyoFee: pick('nyukyoFee', '入居費用') || '',
-    costNote: pick('costNote', '費用備考', '信頼性・特記') || '',
-    lastUpdated: pick('lastUpdated', '最終更新日') || '',
-    lastUpdater: pick('lastUpdater', '更新者') || '',
-    inheritNote: pick('inheritNote', '引継ぎ備考') || '',
+    nyukyoFee: pick('nyukyoFee', '入居費用', '入居時費用') || '',
+    costNote: pick('costNote', '費用備考', '信頼性・特記', '費用に関する\n信頼性・特記事項') || '',
+    lastUpdated: pick('lastUpdated', '最終更新日', '最終更新\n日時') || '',
+    lastUpdater: pick('lastUpdater', '更新者', '最終更新者') || '',
+    inheritNote: pick('inheritNote', '引継ぎ備考', '引き継ぎメモ') || '',
     timeline: [],
     zip: pick('zip', '郵便番号') || '',
-    lat: row.lat ? parseFloat(row.lat) : null,
-    lng: row.lng ? parseFloat(row.lng) : null,
+    lat: toFloat(pick('lat', '緯度')),
+    lng: toFloat(pick('lng', '経度')),
     closedDate: pick('closedDate', '閉鎖日') || '',
     vacancyNote: pick('vacancyNote', '空床備考') || ''
   };
