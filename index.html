@@ -24207,12 +24207,19 @@ async function postMemo() {
   if (!f) return;
   const today = new Date();
   const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const dateStrSlash = dateStr.replace(/-/g, '/');
   f.timeline.push({ author, date: dateStr, text });
   saveTimeline(f.id, f.timeline);
   closeMemoSheet();
   showToast('✅ メモを投稿しました');
   const targetId = memoTargetId;
-  await postTimelineToGAS({ 施設ID: f.id, author, date: dateStr, text });
+  await postTimelineToGAS({
+    facilityId: f.id,
+    facilityName: f.name,
+    text,
+    date: dateStrSlash,
+    author,
+  });
   // no-corsではPOSTの完了タイミングしか分からず、GAS側（スプレッドシート）への反映に
   // 多少ラグが出ることがあるため、1秒待ってから最新タイムラインを取得し直す
   if (currentFacilityId === targetId) {
@@ -24465,13 +24472,13 @@ function normalizeTimelineEntryFromApi(row) {
     }
     return '';
   };
-  const text = pick('text', '内容', '本文', 'コメント');
+  const text = pick('text', '投稿テキスト', '内容', '本文', 'コメント');
   if (!text) return null;
   return {
-    author: pick('author', '投稿者', '氏名') || '',
-    date: pick('date', '投稿日時', '日付') || '',
+    author: pick('author', '投稿者名', '投稿者', '氏名') || '',
+    date: pick('date', '確認年月日', '投稿日時', '日付') || '',
     text: String(text),
-    hasPhoto: !!pick('hasPhoto', '写真'),
+    hasPhoto: !!pick('hasPhoto', '写真URL', '写真'),
   };
 }
 

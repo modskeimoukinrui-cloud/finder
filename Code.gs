@@ -84,15 +84,25 @@ function postTimeline(payload) {
     throw new Error('タイムラインシートにヘッダーがありません');
   }
 
-  const headers = sheet.getRange(HEADER_ROWS.TIMELINE, 1, 1, sheet.getLastColumn()).getValues()[0];
-  const now = new Date();
-  const row = headers.map(h => {
-    if (h === '投稿日時') return now;
-    return payload[h] !== undefined ? payload[h] : '';
-  });
+  // 投稿ID：既存データ行数（ヘッダー行の次から数えた連番）を基に "P00001" 形式で採番
+  const seq = Math.max(1, sheet.getLastRow() - HEADER_ROWS.TIMELINE + 1);
+  const postId = 'P' + String(seq).padStart(5, '0');
+
+  // ③口コミ・タイムラインシートの実際の列順：
+  // 投稿ID / 施設固有ID / 施設名（参照用） / 投稿テキスト / 写真URL / 確認年月日 / 投稿者名 / システム通知フラグ
+  const row = [
+    postId,
+    payload.facilityId || '',
+    payload.facilityName || '',
+    payload.text || '',
+    '',
+    payload.date || '',
+    payload.author || '',
+    '',
+  ];
 
   sheet.appendRow(row);
-  return { success: true, timestamp: now.toISOString() };
+  return { success: true, postId: postId };
 }
 
 function doGet(e) {
