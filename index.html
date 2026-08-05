@@ -1533,7 +1533,7 @@
   </div>
 
   <button class="fab-detail" onclick="openMemoSheet('current')" id="fab-detail">
-    ✏️ メモを追加
+    ✏️ タイムラインを追加
   </button>
 </div>
 
@@ -1542,7 +1542,7 @@
   <div class="memo-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">📝 メモ・口コミを追加</div>
+      <div class="sheet-title">📝 タイムライン・口コミを追加</div>
       <button class="sheet-close" onclick="closeMemoSheet()">✕</button>
     </div>
     <div class="sheet-body">
@@ -24211,7 +24211,7 @@ async function postMemo() {
   f.timeline.push({ author, date: dateStr, text });
   saveTimeline(f.id, f.timeline);
   closeMemoSheet();
-  showToast('✅ メモを投稿しました');
+  showToast('✅ タイムラインを投稿しました');
   const targetId = memoTargetId;
   await postTimelineToGAS({
     facilityId: f.id,
