@@ -24355,21 +24355,24 @@ async function saveEdit() {
   saveTimeline(f.id, f.timeline);
 
   closeEditSheet();
-  showToast('✅ 施設情報を更新しました');
 
   // GASへ保存（②施設詳細・ケア体制シートの該当行を更新する）
   const targetId = memoTargetId;
-  await updateFacilityDetailOnGAS(f);
-  // no-corsでは書き込み結果を読めないため、少し待ってから最新データを取り直す
+  const saved = await updateFacilityDetailOnGAS(f);
+  // 保存できたときだけ成功と伝える（失敗時は updateFacilityDetailOnGAS が警告を表示する）
+  if (saved) showToast('✅ 施設情報を更新しました');
+
   if (currentFacilityId === targetId) {
     renderDetailScreen(f);
-    setTimeout(() => refreshFacilityFromGAS(targetId), 1000);
+    if (saved) refreshFacilityFromGAS(targetId);
   } else {
     renderList();
   }
 }
 
-// 「施設情報を更新」フォームの内容をGASへ送信する
+// 「施設情報を更新」フォームの内容をGASへ送信する。
+// GASはCORSヘッダーを返すため mode:'no-cors' は使わない。
+// no-corsだと保存に失敗しても結果を読めず、成功したように見えてしまうため。
 async function updateFacilityDetailOnGAS(f) {
   // ケア体制は②シートの実際の列名で送る（CARE_LABELSは表示用の略称なので実列名に読み替える）
   const care = {};
@@ -24379,9 +24382,8 @@ async function updateFacilityDetailOnGAS(f) {
   });
 
   try {
-    await fetch(GAS_URL, {
+    const res = await fetch(GAS_URL, {
       method: 'POST',
-      mode: 'no-cors',
       redirect: 'follow',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
@@ -24396,9 +24398,13 @@ async function updateFacilityDetailOnGAS(f) {
         updatedBy: currentUser || '',
       }),
     });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data && data.error) throw new Error(data.error);
     return true;
   } catch (e) {
     console.warn('GAS 施設情報の保存に失敗:', e);
+    showToast('⚠️ 保存に失敗しました（通信環境をご確認ください）');
     return false;
   }
 }
