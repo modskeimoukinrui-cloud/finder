@@ -23833,10 +23833,8 @@ function renderList() {
     if (f.monthlyFeeRaw) {
       // 長い場合は短縮
       costStr = f.monthlyFeeRaw.length > 14 ? f.monthlyFeeRaw.substring(0,14)+'…' : f.monthlyFeeRaw;
-    } else if (f.costMin && f.costMax) {
-      costStr = `${(f.costMin/10000).toFixed(0)}〜${(f.costMax/10000).toFixed(0)}万円`;
     } else {
-      costStr = '要確認';
+      costStr = formatCostRange(f, 'short');
     }
 
     const careTags = activeCare.slice(0,5).map(([k]) => `<span class="care-tag care-tag-green">${CARE_LABELS[k]}</span>`).join('') +
@@ -23924,7 +23922,7 @@ function renderDetailScreen(f) {
       return `<div class="timeline-item"><div class="timeline-avatar">${initials}</div><div class="timeline-body"><div class="timeline-meta"><span class="timeline-author">${t.author}</span><span class="timeline-date">${t.date}</span></div><div class="timeline-text">${t.text}</div>${t.hasPhoto?'<div class="timeline-photo">🏥</div>':''}</div></div>`;
     }).join('');
 
-  const costStr = f.monthlyFeeRaw ? f.monthlyFeeRaw : (f.costMin && f.costMax ? `${f.costMin.toLocaleString()}円 〜 ${f.costMax.toLocaleString()}円` : '要確認');
+  const costStr = f.monthlyFeeRaw ? f.monthlyFeeRaw : formatCostRange(f, 'full');
 
   document.getElementById('detail-content').innerHTML = `
     <a href="https://maps.google.com/?q=${encodeURIComponent(f.address)}" target="_blank" rel="noopener" style="text-decoration:none;display:block;">
@@ -24237,6 +24235,32 @@ async function postMemo() {
 // ============================
 //  EDIT SHEET
 // ============================
+// 属性値に埋め込む文字列をエスケープする
+function escapeAttr(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// ケア体制の選択肢。実データには 〇/要相談 以外に ×・日中常駐・24H常駐・その他 が入るため、
+// それらを選択肢に含める。想定外の値が入っていた場合も選択肢として復元し、
+// 編集画面を開いただけで既存の値が失われないようにする。
+function careOptionsFor(key, currentVal) {
+  const opts = [
+    { value: '', label: '―' },
+    { value: '〇', label: '〇' },
+    { value: '要相談', label: '要相談' },
+    { value: '×', label: '×' },
+  ];
+  if (key === 'kango24h') {
+    opts.push({ value: '24H常駐', label: '24H常駐' });
+    opts.push({ value: '日中常駐', label: '日中常駐' });
+  }
+  opts.push({ value: 'その他', label: 'その他' });
+  if (currentVal && !opts.some(o => o.value === currentVal)) {
+    opts.push({ value: currentVal, label: currentVal });
+  }
+  return opts;
+}
+
 function openEditSheet(id) {
   const f = FACILITIES.find(x => x.id === id);
   if (!f) return;
@@ -24244,13 +24268,13 @@ function openEditSheet(id) {
 
   const careRows = Object.entries(CARE_LABELS).map(([key, label]) => {
     const val = f.care[key] || '';
+    const opts = careOptionsFor(key, val);
+    const optHtml = opts.map(o =>
+      `<option value="${escapeAttr(o.value)}" ${val === o.value ? 'selected' : ''}>${o.label}</option>`
+    ).join('');
     return `<div class="toggle-row">
       <span class="toggle-label">${label}</span>
-      <select class="toggle-select" id="edit-${key}">
-        <option value="" ${val===''?'selected':''}>―</option>
-        <option value="〇" ${val==='〇'?'selected':''}>〇</option>
-        <option value="要相談" ${val==='要相談'?'selected':''}>要相談</option>
-      </select>
+      <select class="toggle-select" id="edit-${key}">${optHtml}</select>
     </div>`;
   }).join('');
 
@@ -24300,7 +24324,7 @@ function closeEditSheetIfBg(e) {
   if (e.target === document.getElementById('edit-overlay')) closeEditSheet();
 }
 
-function saveEdit() {
+async function saveEdit() {
   const f = FACILITIES.find(x => x.id === memoTargetId);
   if (!f) return;
 
@@ -24332,7 +24356,76 @@ function saveEdit() {
 
   closeEditSheet();
   showToast('✅ 施設情報を更新しました');
-  showDetail(memoTargetId);
+
+  // GASへ保存（②施設詳細・ケア体制シートの該当行を更新する）
+  const targetId = memoTargetId;
+  await updateFacilityDetailOnGAS(f);
+  // no-corsでは書き込み結果を読めないため、少し待ってから最新データを取り直す
+  if (currentFacilityId === targetId) {
+    renderDetailScreen(f);
+    setTimeout(() => refreshFacilityFromGAS(targetId), 1000);
+  } else {
+    renderList();
+  }
+}
+
+// 「施設情報を更新」フォームの内容をGASへ送信する
+async function updateFacilityDetailOnGAS(f) {
+  // ケア体制は②シートの実際の列名で送る（CARE_LABELSは表示用の略称なので実列名に読み替える）
+  const care = {};
+  Object.keys(CARE_LABELS).forEach(key => {
+    const col = CARE_GAS_LABELS[key] || CARE_LABELS[key];
+    care[col] = f.care[key] || '';
+  });
+
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'updateFacilityDetail',
+        facilityId: f.id,
+        vacancy: VACANCY_TO_SHEET[f.vacancy] || '',
+        vacancyNote: f.vacancyNote || '',
+        costMin: f.costMin === null || f.costMin === undefined ? '' : f.costMin,
+        costMax: f.costMax === null || f.costMax === undefined ? '' : f.costMax,
+        costNote: f.costNote || '',
+        care,
+        updatedBy: currentUser || '',
+      }),
+    });
+    return true;
+  } catch (e) {
+    console.warn('GAS 施設情報の保存に失敗:', e);
+    return false;
+  }
+}
+
+// 保存後にGASから該当施設を取り直して、画面の表示を実際の保存内容に合わせる
+async function refreshFacilityFromGAS(id) {
+  try {
+    const res = await fetch(`${GAS_URL}?action=facilities`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!Array.isArray(data)) return;
+    const row = data.find(r => {
+      const idKey = Object.keys(r).find(k => k.replace(/\s/g, '').includes('ID'));
+      return idKey && String(r[idKey]).trim() === id;
+    });
+    if (!row) return;
+    const fresh = normalizeFacilityFromApi(row);
+    if (!fresh) return;
+    const idx = FACILITIES.findIndex(x => x.id === id);
+    if (idx === -1) return;
+    fresh.timeline = FACILITIES[idx].timeline;   // タイムラインは別管理なので引き継ぐ
+    FACILITIES[idx] = fresh;
+    if (currentFacilityId === id) renderDetailScreen(fresh);
+    else renderList();
+  } catch (e) {
+    console.warn('GAS 施設情報の再取得に失敗:', id, e);
+  }
 }
 
 // ============================
@@ -24370,6 +24463,30 @@ const CARE_GAS_LABELS = {
   kango24h: '24時間\n看護師',
   kokyuki: '人工\n呼吸器',
 };
+
+// 空床状況：アプリ内部のコード ↔ シートに保存する日本語表記
+const VACANCY_TO_SHEET = { available: '空きあり', soon: '近日空き予定', full: '満床' };
+const VACANCY_FROM_SHEET = { '空きあり': 'available', '近日空き予定': 'soon', '満床': 'full' };
+
+// costMin / costMax から表示用の費用文字列を作る。
+// 上限が空のときは「13万円〜」のように上限なしとして表示する（「要確認」にしない）。
+// mode='short' はカード用（万円単位）、mode='full' は詳細画面用（円単位）。
+function formatCostRange(f, mode) {
+  const min = f.costMin, max = f.costMax;
+  const man = v => (v / 10000).toFixed(0) + '万円';
+  const yen = v => v.toLocaleString() + '円';
+  const fmt = mode === 'full' ? yen : man;
+  const sep = mode === 'full' ? ' 〜 ' : '〜';
+
+  if (min && max) {
+    const a = fmt(min), b = fmt(max);
+    // 万円単位に丸めた結果が同じなら「15万円〜15万円」とは出さず、ひとつにまとめる
+    return a === b ? a : a + sep + b;
+  }
+  if (min) return fmt(min) + '〜';
+  if (max) return '〜' + fmt(max);
+  return '要確認';
+}
 
 // GASから返ってくる行データ（シート①+②マージ）を、アプリ内部で使うFACILITIESの形に正規化する。
 // 実際のシート列名（一部改行文字入り）に合わせて候補キーを複数試す。
@@ -24413,8 +24530,10 @@ function normalizeFacilityFromApi(row) {
     tel: pick('tel', '電話番号', '電話') || '-',
     status,
     care,
-    costMin: toNum(pick('costMin', '費用下限', '最低費用')),
-    costMax: toNum(pick('costMax', '費用上限', '最高費用')),
+    costMin: toNum(pick('costMin', '月額下限（円）', '費用下限', '最低費用')),
+    costMax: toNum(pick('costMax', '月額上限（円）', '費用上限', '最高費用')),
+    vacancy: VACANCY_FROM_SHEET[String(pick('vacancy', '空床状況')).trim()] || '',
+    vacancyDate: pick('vacancyDate', '空床確認日') || '',
     monthlyFeeRaw: pick('monthlyFeeRaw', '月額費用目安', '月額費用') || '',
     nyukyoFee: pick('nyukyoFee', '入居費用', '入居時費用') || '',
     costNote: pick('costNote', '費用備考', '信頼性・特記', '費用に関する\n信頼性・特記事項') || '',
@@ -24426,7 +24545,7 @@ function normalizeFacilityFromApi(row) {
     lat: toFloat(pick('lat', '緯度')),
     lng: toFloat(pick('lng', '経度')),
     closedDate: pick('closedDate', '閉鎖日') || '',
-    vacancyNote: pick('vacancyNote', '空床備考') || ''
+    vacancyNote: pick('vacancyNote', '空床メモ', '空床備考') || ''
   };
 }
 
