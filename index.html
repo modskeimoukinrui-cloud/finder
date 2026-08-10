@@ -23335,6 +23335,21 @@ const VACANCY_STALE1_DAYS = 14;
 const VACANCY_STALE2_DAYS = 30;
 const VACANCY_HIDE_DAYS   = 60;
 
+// セクション見出しの横に「◯月◯日 更新」を小さく添える。日付が無ければ何も出さない。
+function renderUpdatedTag(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const label = isNaN(d) ? String(dateStr)
+    : `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  return `<span style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:8px;">${label} 更新</span>`;
+}
+
+// 今日の日付を YYYY-MM-DD で返す
+function todayString() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function vacancyDaysSince(dateStr) {
   if (!dateStr) return null;
   const d = new Date(dateStr);
@@ -23957,7 +23972,7 @@ function renderDetailScreen(f) {
 
     ${f.status !== 'closed' ? `
     <div class="detail-section">
-      <div class="section-title">💰 費用情報</div>
+      <div class="section-title">💰 費用情報${renderUpdatedTag(f.costUpdated)}</div>
       <div class="info-row"><span class="info-label">月額費用目安</span><span class="info-value" style="font-size:12px;">${costStr}</span></div>
       ${f.nyukyoFee ? `<div class="info-row"><span class="info-label">入居費用</span><span class="info-value" style="font-size:12px;">${f.nyukyoFee}</span></div>` : ''}
       ${f.costNote ? `<div class="info-row"><span class="info-label" style="font-size:11px;">信頼性・特記</span><span class="info-value" style="font-size:11px;color:var(--text-secondary);">${f.costNote}</span></div>` : ''}
@@ -23965,7 +23980,7 @@ function renderDetailScreen(f) {
     </div>
 
     <div class="detail-section">
-      <div class="section-title">🩺 ケア体制・医療ケア</div>
+      <div class="section-title">🩺 ケア体制・医療ケア${renderUpdatedTag(f.careUpdated)}</div>
       <div class="care-grid">${careItems}</div>
       <button class="edit-btn" onclick="openEditSheet('${f.id}')">✏️ 施設情報を更新する</button>
     </div>
@@ -23986,9 +24001,8 @@ async function refreshTimelineFromGAS(id) {
   if (!data || currentFacilityId !== id) return;
   const f = FACILITIES.find(x => x.id === id);
   if (!f) return;
-  const sysList = f.timeline.filter(t => t.sys);
-  const userList = data.map(normalizeTimelineEntryFromApi).filter(Boolean);
-  f.timeline = [...sysList, ...userList];
+  // タイムラインは③口コミ・タイムラインシートの内容だけを正とする
+  f.timeline = data.map(normalizeTimelineEntryFromApi).filter(Boolean);
   renderDetailScreen(f);
 }
 
@@ -24297,6 +24311,10 @@ function openEditSheet(id) {
       <input type="text" class="field-input" id="edit-vacancyNote" value="${f.vacancyNote||''}" placeholder="例：○月頃に空き予定、○室空きあり" style="width:100%;margin-top:4px;">
     </div>
     <div class="field-label">費用情報</div>
+    <div style="padding:0 0 8px;">
+      <div class="field-label" style="margin-top:0;">入居時費用</div>
+      <input type="text" class="field-input" id="edit-nyukyoFee" value="${escapeAttr(f.nyukyoFee || '')}" placeholder="例：20万円（敷金）" style="width:100%;margin-top:4px;">
+    </div>
     <div class="cost-field-row">
       <span class="cost-field-label">月額下限（円）</span>
       <input type="number" class="cost-field-input" id="edit-costMin" value="${f.costMin || ''}" placeholder="例：100000">
@@ -24334,25 +24352,37 @@ async function saveEdit() {
   f.vacancy = vacancyVal;
   f.vacancyNote = document.getElementById('edit-vacancyNote')?.value || '';
   if (vacancyVal && vacancyVal !== prevVacancy) {
-    const today2 = new Date();
-    f.vacancyDate = `${today2.getFullYear()}-${String(today2.getMonth()+1).padStart(2,'0')}-${String(today2.getDate()).padStart(2,'0')}`;
+    f.vacancyDate = todayString();
   }
 
+  // 費用（変更があった場合は費用更新日を今日にする）
+  const todayStr = todayString();
   const minVal = document.getElementById('edit-costMin')?.value;
   const maxVal = document.getElementById('edit-costMax')?.value;
-  f.costMin = minVal ? parseInt(minVal) : null;
-  f.costMax = maxVal ? parseInt(maxVal) : null;
-  f.costNote = document.getElementById('edit-costNote')?.value || '';
+  const nyukyoVal = document.getElementById('edit-nyukyoFee')?.value || '';
+  const newCostMin = minVal ? parseInt(minVal) : null;
+  const newCostMax = maxVal ? parseInt(maxVal) : null;
+  const newCostNote = document.getElementById('edit-costNote')?.value || '';
+  const costChanged =
+    newCostMin !== (f.costMin ?? null) ||
+    newCostMax !== (f.costMax ?? null) ||
+    newCostNote !== (f.costNote || '') ||
+    nyukyoVal !== (f.nyukyoFee || '');
+  f.nyukyoFee = nyukyoVal;
+  f.costMin = newCostMin;
+  f.costMax = newCostMax;
+  f.costNote = newCostNote;
+  if (costChanged) f.costUpdated = todayStr;
 
+  // ケア体制（変更があった場合はケア体制更新日を今日にする）
+  let careChanged = false;
   Object.keys(CARE_LABELS).forEach(key => {
     const el = document.getElementById('edit-'+key);
-    if (el) f.care[key] = el.value;
+    if (!el) return;
+    if ((f.care[key] || '') !== el.value) careChanged = true;
+    f.care[key] = el.value;
   });
-
-  const today = new Date();
-  const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-  f.timeline.push({ author: "🔔", date: dateStr, text: `【システム通知】基本情報・ケア体制が更新されました（${dateStr}）`, sys: true });
-  saveTimeline(f.id, f.timeline);
+  if (careChanged) f.careUpdated = todayStr;
 
   closeEditSheet();
 
@@ -24391,6 +24421,7 @@ async function updateFacilityDetailOnGAS(f) {
         facilityId: f.id,
         vacancy: VACANCY_TO_SHEET[f.vacancy] || '',
         vacancyNote: f.vacancyNote || '',
+        nyukyoFee: f.nyukyoFee || '',
         costMin: f.costMin === null || f.costMin === undefined ? '' : f.costMin,
         costMax: f.costMax === null || f.costMax === undefined ? '' : f.costMax,
         costNote: f.costNote || '',
@@ -24540,6 +24571,8 @@ function normalizeFacilityFromApi(row) {
     costMax: toNum(pick('costMax', '月額上限（円）', '費用上限', '最高費用')),
     vacancy: VACANCY_FROM_SHEET[String(pick('vacancy', '空床状況')).trim()] || '',
     vacancyDate: pick('vacancyDate', '空床確認日') || '',
+    costUpdated: pick('costUpdated', '費用更新日') || '',
+    careUpdated: pick('careUpdated', 'ケア体制更新日') || '',
     monthlyFeeRaw: pick('monthlyFeeRaw', '月額費用目安', '月額費用') || '',
     nyukyoFee: pick('nyukyoFee', '入居費用', '入居時費用') || '',
     costNote: pick('costNote', '費用備考', '信頼性・特記', '費用に関する\n信頼性・特記事項') || '',
@@ -24569,11 +24602,9 @@ function applyFacilitiesFromApi(rawArray) {
     return false;
   }
 
-  // 静的に埋め込まれたsys（🔔）タイムラインはフォールバックデータから引き継ぐ
-  normalized.forEach(f => {
-    const fb = FACILITIES_FALLBACK.find(x => x.id === f.id);
-    if (fb) f.timeline = fb.timeline.filter(t => t.sys);
-  });
+  // タイムラインは③シートから取得するため、ここでは空で始める
+  // （埋め込みデータの🔔は③の移行データと重複するので引き継がない）
+  normalized.forEach(f => { f.timeline = []; });
 
   FACILITIES = normalized;
   return true;
@@ -24669,14 +24700,13 @@ function saveTimeline(facilityId, timeline) {
 
 function loadAllTimelines() {
   FACILITIES.forEach(f => {
+    // 🔔のシステム通知は廃止したので、埋め込みデータ・localStorageの両方から取り除く
+    f.timeline = (f.timeline || []).filter(t => !t.sys);
     try {
       const stored = localStorage.getItem(TL_PREFIX + f.id);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // 既存のsysエントリは保持し、保存済みエントリとマージ（重複除去）
-        const sysList = f.timeline.filter(t => t.sys);
-        const userList = parsed.filter(t => !t.sys);
-        f.timeline = [...sysList, ...userList];
+        f.timeline = parsed.filter(t => !t.sys);
       }
     } catch(e) {
       console.warn('timeline読み込みエラー:', f.id, e);
