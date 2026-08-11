@@ -605,6 +605,42 @@
     border-bottom: 1px solid var(--border);
   }
   .timeline-item:last-child { border-bottom: none; }
+
+  /* タイムラインのスワイプ削除 */
+  .tl-row { position: relative; overflow: hidden; }
+  .tl-row:last-child .timeline-item { border-bottom: none; }
+  .tl-slide {
+    position: relative;
+    z-index: 1;
+    background: var(--surface);
+    transition: transform 0.2s ease;
+    touch-action: pan-y;
+  }
+  .tl-row.revealed .tl-slide { transform: translateX(-84px); }
+  .tl-delete-btn {
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 84px;
+    border: none;
+    background: var(--warn);
+    color: #fff;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    gap: 4px;
+  }
+  .tl-delete-btn:active { filter: brightness(0.92); }
+  /* マウス環境ではホバーで削除ボタンを出す（スワイプできない端末向け） */
+  @media (hover: hover) and (pointer: fine) {
+    .tl-row.deletable:hover .tl-slide { transform: translateX(-84px); }
+  }
+  .tl-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 6px 0 0;
+  }
   .timeline-avatar {
     width: 34px; height: 34px;
     border-radius: 50%;
@@ -23398,6 +23434,9 @@ function getUserPin(name) {
 // 現在ログイン中のユーザー名（生の名前）
 let currentUser = localStorage.getItem('finder_currentUser') || '';
 
+// 管理者PINの認証を通ったかどうか。ページを閉じるまで有効（localStorageには残さない）
+let isAdminSession = false;
+
 // ============================
 //  LOGIN SCREEN
 // ============================
@@ -23517,6 +23556,7 @@ function hideLogoutConfirm() {
 }
 function doLogout() {
   currentUser = '';
+  isAdminSession = false;   // ログアウトしたら管理者状態も解除する
   localStorage.removeItem('finder_currentUser');
   closeSettings();
   selectedMember = '';
@@ -23555,6 +23595,9 @@ function verifyAdmin() {
     document.getElementById('admin-error').textContent = '管理者PINが違います';
     return;
   }
+  // 管理者として認証できたことをこのセッションの間だけ覚えておく。
+  // localStorageには残さないので、ページを閉じれば解除される。
+  isAdminSession = true;
   // 認証成功：リセットUIを表示
   document.getElementById('admin-body').innerHTML = `
     <div class="field-label" style="margin-top:0;color:var(--accent);">✅ 管理者認証済み</div>
@@ -23929,13 +23972,20 @@ function renderDetailScreen(f) {
     return `<div class="care-item"><span class="care-item-name">${label}</span><span class="care-status ${cls}">${display}</span></div>`;
   }).join('');
 
+  const deletableCount = f.timeline.filter(canDeleteTimeline).length;
   const tlHtml = f.timeline.length === 0 ?
     '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">まだ投稿がありません</div>' :
     [...f.timeline].reverse().map(t => {
-      if (t.sys) return `<div class="timeline-item"><div class="timeline-avatar sys">🔔</div><div class="timeline-body"><div class="timeline-meta"><span class="timeline-date">${t.date}</span></div><div class="timeline-text"><span class="sys-notice">🔔 ${t.text.replace(/【.*?】/,'')}</span></div></div></div>`;
       const initials = t.author ? t.author.charAt(0) : '?';
-      return `<div class="timeline-item"><div class="timeline-avatar">${initials}</div><div class="timeline-body"><div class="timeline-meta"><span class="timeline-author">${t.author}</span><span class="timeline-date">${t.date}</span></div><div class="timeline-text">${t.text}</div>${t.hasPhoto?'<div class="timeline-photo">🏥</div>':''}</div></div>`;
-    }).join('');
+      const item = `<div class="timeline-item"><div class="timeline-avatar">${initials}</div><div class="timeline-body"><div class="timeline-meta"><span class="timeline-author">${escapeAttr(t.author || '')}</span><span class="timeline-date">${escapeAttr(t.date || '')}</span></div><div class="timeline-text">${t.text}</div>${t.hasPhoto?'<div class="timeline-photo">🏥</div>':''}</div></div>`;
+      // 削除できない投稿はスワイプの仕掛けを付けずにそのまま表示する
+      if (!canDeleteTimeline(t)) return `<div class="tl-row">${item}</div>`;
+      return `<div class="tl-row deletable" data-post-id="${escapeAttr(t.id)}">
+        <button class="tl-delete-btn" onclick="confirmDeleteTimeline('${escapeAttr(t.id)}')">🗑 削除</button>
+        <div class="tl-slide">${item}</div>
+      </div>`;
+    }).join('') +
+    (deletableCount ? `<div class="tl-hint">💡 削除できる投稿は左にスワイプ（PCはマウスを重ねる／長押し）すると削除ボタンが出ます</div>` : '');
 
   const costStr = f.monthlyFeeRaw ? f.monthlyFeeRaw : formatCostRange(f, 'full');
 
@@ -23992,10 +24042,134 @@ function renderDetailScreen(f) {
     </div>
   `;
 
+  initTimelineSwipe(document.querySelector('#detail-content .timeline'));
+
   showScreen('detail');
 }
 
 // GASからタイムラインを取得し、まだ同じ施設を表示中であれば再描画する
+// ============================
+//  TIMELINE DELETE
+// ============================
+// 削除できるのは「自分が投稿したもの」か「管理者として認証済みのとき」だけ。
+// 投稿IDが無いもの（GASに未登録＝ローカルのみ）は削除対象にしない。
+function canDeleteTimeline(t) {
+  if (!t || !t.id) return false;
+  if (isAdminSession) return true;
+  return !!currentUser && String(t.author || '').trim() === String(currentUser).trim();
+}
+
+function confirmDeleteTimeline(postId) {
+  const f = FACILITIES.find(x => x.id === currentFacilityId);
+  const t = f && (f.timeline || []).find(x => x.id === postId);
+  if (!t) { showToast('対象の投稿が見つかりません'); return; }
+  if (!canDeleteTimeline(t)) { showToast('この投稿を削除する権限がありません'); return; }
+
+  const preview = String(t.text || '').slice(0, 40) + (String(t.text || '').length > 40 ? '…' : '');
+  const who = t.author ? `${t.author} さんの投稿` : 'この投稿';
+  if (!confirm(`本当に削除しますか？\n\n${who}\n「${preview}」\n\n削除すると元に戻せません。`)) return;
+
+  deleteTimelineEntry(postId);
+}
+
+async function deleteTimelineEntry(postId) {
+  const facilityId = currentFacilityId;
+  const f = FACILITIES.find(x => x.id === facilityId);
+  if (!f) return;
+  const t = (f.timeline || []).find(x => x.id === postId);
+  if (!t) return;
+
+  const ok = await deleteTimelineOnGAS(postId, t);
+  if (!ok) { showToast('⚠️ 削除できませんでした。通信状況を確認してください'); return; }
+
+  showToast('🗑 投稿を削除しました');
+  // 画面上からはすぐ消し、少し待ってからシートの内容で取り直す
+  f.timeline = (f.timeline || []).filter(x => x.id !== postId);
+  renderDetailScreen(f);
+  setTimeout(() => refreshTimelineFromGAS(facilityId), 1000);
+}
+
+// GASへ削除リクエストを送る。no-corsでは結果を読めないため、
+// 通常のPOSTを試し、CORSで読めない場合はno-corsで送り直す。
+async function deleteTimelineOnGAS(postId, entry) {
+  const body = JSON.stringify({
+    action: 'deleteTimeline',
+    postId: postId,
+    requestedBy: currentUser || '',
+    asAdmin: isAdminSession === true,
+  });
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body,
+    });
+    const data = await res.json();
+    if (data && data.error) { console.warn('GAS 削除エラー:', data.error); showToast('⚠️ ' + data.error); return false; }
+    return !!(data && data.success);
+  } catch (e) {
+    // レスポンスが読めない環境向けのフォールバック（送信自体は行われる）
+    console.warn('削除レスポンスを読めなかったため no-cors で送り直します:', e);
+    try {
+      await fetch(GAS_URL, {
+        method: 'POST', mode: 'no-cors', redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body,
+      });
+      return true;
+    } catch (e2) {
+      console.warn('GAS 削除に失敗:', e2);
+      return false;
+    }
+  }
+}
+
+// タイムラインのスワイプ操作。左に一定量スワイプすると削除ボタンが出る。
+// タッチできない環境ではCSSのhoverで、長押しでも出せるようにしている。
+function initTimelineSwipe(container) {
+  if (!container || container.dataset.swipeReady === '1') return;
+  container.dataset.swipeReady = '1';
+
+  let startX = 0, startY = 0, activeRow = null, longPressTimer = null, moved = false;
+
+  const closeAll = (except) => {
+    container.querySelectorAll('.tl-row.revealed').forEach(r => { if (r !== except) r.classList.remove('revealed'); });
+  };
+
+  container.addEventListener('touchstart', (e) => {
+    const row = e.target.closest('.tl-row.deletable');
+    activeRow = row;
+    moved = false;
+    if (!row) { closeAll(null); return; }
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    // 長押しでも削除ボタンを出せるようにする
+    longPressTimer = setTimeout(() => { if (!moved) { closeAll(row); row.classList.add('revealed'); } }, 600);
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (!activeRow) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) moved = true;
+    // 縦スクロールのほうが大きいときはスワイプ扱いにしない
+    if (Math.abs(dy) > Math.abs(dx)) { clearTimeout(longPressTimer); return; }
+    if (dx < -40) { clearTimeout(longPressTimer); closeAll(activeRow); activeRow.classList.add('revealed'); }
+    else if (dx > 40) { clearTimeout(longPressTimer); activeRow.classList.remove('revealed'); }
+  }, { passive: true });
+
+  const endTouch = () => { clearTimeout(longPressTimer); activeRow = null; };
+  container.addEventListener('touchend', endTouch, { passive: true });
+  container.addEventListener('touchcancel', endTouch, { passive: true });
+
+  // 削除ボタン以外をクリックしたら閉じる
+  container.addEventListener('click', (e) => {
+    if (e.target.closest('.tl-delete-btn')) return;
+    closeAll(null);
+  });
+}
+
 async function refreshTimelineFromGAS(id) {
   const data = await fetchTimelineFromGAS(id);
   if (!data || currentFacilityId !== id) return;
