@@ -1494,19 +1494,33 @@
     <div class="filter-section-title">ケア体制</div>
     <div class="filter-tags">
       <span class="filter-tag" onclick="toggleTag(this,'care')">生活保護</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">生活保護：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">看取り</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">看取り：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">24h看護師</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">24h看護師：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">インスリン</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">インスリン：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">褥瘡</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">褥瘡：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">バルーン</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">バルーン：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">胃瘻</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">胃瘻：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">点滴</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">点滴：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">IVH</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">IVH：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">吸引</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">吸引：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">酸素</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">酸素：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">気管切開</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">気管切開：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">人工呼吸器</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">人工呼吸器：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">透析</span>
+      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">透析：その他</span>
     </div>
     <div class="filter-section-title">月額費用（円）</div>
     <div class="cost-range">
@@ -1538,7 +1552,7 @@
     <button class="section-tab"       id="stab-history" onclick="setSectionTab('history',this)">🕐 最近見た</button>
   </div>
   <div class="result-bar">
-    <div class="result-count">検索結果：<strong id="result-count-num">15</strong>件</div>
+    <div class="result-count">検索結果：<strong id="result-count-num">0</strong>件</div>
     <div class="tab-group">
       <button class="tab-btn active" id="tab-name"     data-label="名前順" onclick="setSort('name',this)">名前順 ↑</button>
       <button class="tab-btn"        id="tab-cost"     data-label="費用順" onclick="setSort('cost',this)">費用順</button>
@@ -23685,7 +23699,7 @@ function getMainFilteredList() {
     if (showClosed) return f.status === 'closed';
     if (f.status === 'closed') return false;
     if (currentTypeFilter !== 'all' && f.type !== currentTypeFilter) return false;
-    if (keyword && !normalizeJa(f.name).includes(keyword) && !normalizeJa(f.address).includes(keyword)) return false;
+    if (keyword && !normalizeJa(f.name).includes(keyword) && !normalizeJa(f.address).includes(keyword) && !normalizeJa(f.careOtherNote || '').includes(keyword)) return false;
     if (activeWardFilters.length > 0) {
       const CITY_WARDS = ['東', '西', '南', '北', '中央'];
       const wardMatch = activeWardFilters.some(w => {
@@ -23700,10 +23714,12 @@ function getMainFilteredList() {
     if (activeCareFilters.length > 0) {
       const careMap = { "生活保護":"seikatsuHogo","看取り":"mitomori","24h看護師":"kango24h","インスリン":"insulin","褥瘡":"jokuso","バルーン":"balloon","胃瘻":"irou","点滴":"tenteki","IVH":"ivh","吸引":"kyuin","酸素":"sanso","気管切開":"kissetsu","人工呼吸器":"kokyuki","透析":"toseki" };
       for (const label of activeCareFilters) {
-        const key = careMap[label];
+        const isOther = label.endsWith('：その他');
+        const key = careMap[isOther ? label.slice(0, -'：その他'.length) : label];
         if (!key) continue;
         const val = f.care[key] || "";
-        if (!val || val === "×") return false;
+        if (isOther) { if (val !== "その他") return false; }
+        else { if (!val || val === "×") return false; }
       }
     }
     return true;
@@ -24037,6 +24053,7 @@ function renderDetailScreen(f) {
     <div class="detail-section">
       <div class="section-title">🩺 ケア体制・医療ケア${renderUpdatedTag(f.careUpdated)}</div>
       <div class="care-grid">${careItems}</div>
+      ${f.careOtherNote ? `<div class="info-row"><span class="info-label" style="font-size:11px;">その他</span><span class="info-value" style="font-size:11px;color:var(--text-secondary);">${f.careOtherNote}</span></div>` : ''}
       <button class="edit-btn" onclick="openEditSheet('${f.id}')">✏️ 施設情報を更新する</button>
     </div>
     ` : ''}
@@ -24236,10 +24253,12 @@ function setTypeFilter(type, el) {
   if(currentView==='map') updateMapMarkers();
 }
 
+const CARE_FILTER_LABELS = ["生活保護","看取り","24h看護師","インスリン","褥瘡","バルーン","胃瘻","点滴","IVH","吸引","酸素","気管切開","人工呼吸器","透析"];
 function toggleTag(el, group) {
   el.classList.toggle('active');
   if (group === 'care') {
-    activeCareFilters = [...document.querySelectorAll('#filter-panel .filter-tag.active')].map(e => e.textContent).filter(t => ["生活保護","看取り","24h看護師","インスリン","褥瘡","バルーン","胃瘻","点滴","IVH","吸引","酸素","気管切開","人工呼吸器","透析"].includes(t));
+    const allowed = CARE_FILTER_LABELS.concat(CARE_FILTER_LABELS.map(l => l + '：その他'));
+    activeCareFilters = [...document.querySelectorAll('#filter-panel .filter-tag.active')].map(e => e.textContent).filter(t => allowed.includes(t));
   } else {
     activeWardFilters = [...document.querySelectorAll('#ward-filters .filter-tag.active')].map(e => e.textContent);
   }
@@ -24508,6 +24527,10 @@ function openEditSheet(id) {
     </div>
     <div class="field-label" style="margin-top:14px;">ケア体制・医療ケア</div>
     ${careRows}
+    <div style="padding:8px 0 0;">
+      <div class="field-label" style="margin-top:0;">ケア体制「その他」の内容（任意）</div>
+      <textarea class="field-input" id="edit-careOtherNote" placeholder="例：看取り：応相談。酸素：夜間のみ対応" style="width:100%;margin-top:4px;min-height:60px;">${escapeAttr(f.careOtherNote || '')}</textarea>
+    </div>
     <div style="height:8px;"></div>
   `;
 
@@ -24561,6 +24584,9 @@ async function saveEdit() {
     if ((f.care[key] || '') !== el.value) careChanged = true;
     f.care[key] = el.value;
   });
+  const newCareOtherNote = document.getElementById('edit-careOtherNote')?.value || '';
+  if (newCareOtherNote !== (f.careOtherNote || '')) careChanged = true;
+  f.careOtherNote = newCareOtherNote;
   if (careChanged) f.careUpdated = todayStr;
 
   closeEditSheet();
@@ -24605,6 +24631,7 @@ async function updateFacilityDetailOnGAS(f) {
         costMax: f.costMax === null || f.costMax === undefined ? '' : f.costMax,
         costNote: f.costNote || '',
         care,
+        careOtherNote: f.careOtherNote || '',
         updatedBy: currentUser || '',
       }),
     });
@@ -24763,7 +24790,8 @@ function normalizeFacilityFromApi(row) {
     lat: toFloat(pick('lat', '緯度')),
     lng: toFloat(pick('lng', '経度')),
     closedDate: pick('closedDate', '閉鎖日') || '',
-    vacancyNote: pick('vacancyNote', '空床メモ', '空床備考') || ''
+    vacancyNote: pick('vacancyNote', '空床メモ', '空床備考') || '',
+    careOtherNote: pick('careOtherNote', 'ケア体制その他メモ') || ''
   };
 }
 
@@ -24993,10 +25021,12 @@ function getFilteredForMap() {
     if (activeCareFilters.length > 0) {
       const careMap = {"生活保護":"seikatsuHogo","看取り":"mitomori","24h看護師":"kango24h","インスリン":"insulin","褥瘡":"jokuso","バルーン":"balloon","胃瘻":"irou","点滴":"tenteki","IVH":"ivh","吸引":"kyuin","酸素":"sanso","気管切開":"kissetsu","人工呼吸器":"kokyuki","透析":"toseki"};
       for (const label of activeCareFilters) {
-        const key = careMap[label];
+        const isOther = label.endsWith('：その他');
+        const key = careMap[isOther ? label.slice(0, -'：その他'.length) : label];
         if (!key) continue;
         const val = (f.care && f.care[key]) || "";
-        if (!val || val === "x" || val === "×") return false;
+        if (isOther) { if (val !== "その他") return false; }
+        else { if (!val || val === "x" || val === "×") return false; }
       }
     }
     return true;

@@ -193,6 +193,11 @@ function updateFacilityDetail(payload) {
       if (put(label, payload.care[label] || '')) careChanged = true;
     });
   }
+  // 「その他」を選んだ項目がある場合に項目名と内容を書く共通の自由記述欄。
+  // ケア体制の一部という扱いなので、変更検知もケア体制更新日に含める。
+  if (payload.careOtherNote !== undefined) {
+    if (put('ケア体制その他メモ', payload.careOtherNote || '')) careChanged = true;
+  }
   if (careChanged) put('ケア体制更新日', todayInTokyo());
 
   // --- 更新の記録（全体の最終更新。新着順ソート用に項目別の日付とは別に持つ） ---
