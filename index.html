@@ -662,16 +662,20 @@
   .timeline-author { font-size: 12px; font-weight: 700; color: var(--text-primary); }
   .timeline-date { font-size: 11px; color: var(--text-muted); }
   .timeline-text { font-size: 13px; color: var(--text-primary); line-height: 1.6; }
-  .timeline-photo {
+  .timeline-photos {
     margin-top: 8px;
-    width: 100%;
-    max-height: 140px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .timeline-photo-thumb {
+    width: 84px;
+    height: 84px;
+    object-fit: cover;
     border-radius: 10px;
-    background: var(--bg);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 32px;
     border: 1.5px solid var(--border);
-    overflow: hidden;
+    background: var(--bg);
+    display: block;
   }
   .sys-notice {
     font-size: 11px;
@@ -1618,13 +1622,15 @@
         👤 <span id="memo-author-display" style="color:var(--accent);font-weight:600;"></span> として投稿します
       </div>
       <div class="field-label">写真（省略可）</div>
-      <div class="photo-upload-area">
+      <input type="file" id="memo-photo-input" accept="image/*" multiple capture="environment" style="display:none;" onchange="handleMemoPhotoSelect(event)">
+      <div class="photo-upload-area" onclick="document.getElementById('memo-photo-input').click()">
         <div class="icon">📷</div>
-        <div>タップして写真を追加</div>
+        <div id="memo-photo-hint">タップして写真を追加</div>
       </div>
+      <div id="memo-photo-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
     </div>
     <div class="sheet-footer">
-      <button class="btn-post" onclick="postMemo()">投稿する</button>
+      <button class="btn-post" id="memo-post-btn" onclick="postMemo()">投稿する</button>
     </div>
   </div>
 </div>
@@ -23998,7 +24004,10 @@ function renderDetailScreen(f) {
     '<div style="color:var(--text-muted);font-size:13px;padding:12px 0;">まだ投稿がありません</div>' :
     [...f.timeline].reverse().map(t => {
       const initials = t.author ? t.author.charAt(0) : '?';
-      const item = `<div class="timeline-item"><div class="timeline-avatar">${initials}</div><div class="timeline-body"><div class="timeline-meta"><span class="timeline-author">${escapeAttr(t.author || '')}</span><span class="timeline-date">${escapeAttr(t.date || '')}</span></div><div class="timeline-text">${t.text}</div>${t.hasPhoto?'<div class="timeline-photo">🏥</div>':''}</div></div>`;
+      const photosHtml = (t.photos && t.photos.length > 0)
+        ? `<div class="timeline-photos">${t.photos.map(url => `<a href="${escapeAttr(url)}" target="_blank" rel="noopener"><img src="${escapeAttr(url)}" class="timeline-photo-thumb" loading="lazy" alt="投稿写真"></a>`).join('')}</div>`
+        : '';
+      const item = `<div class="timeline-item"><div class="timeline-avatar">${initials}</div><div class="timeline-body"><div class="timeline-meta"><span class="timeline-author">${escapeAttr(t.author || '')}</span><span class="timeline-date">${escapeAttr(t.date || '')}</span></div><div class="timeline-text">${t.text}</div>${photosHtml}</div></div>`;
       // 削除できない投稿はスワイプの仕掛けを付けずにそのまま表示する
       if (!canDeleteTimeline(t)) return `<div class="tl-row">${item}</div>`;
       return `<div class="tl-row deletable" data-post-id="${escapeAttr(t.id)}">
@@ -24339,6 +24348,7 @@ function openMemoSheet(idOrCurrent) {
   }
 
   document.getElementById('memo-text').value = '';
+  resetMemoPhotos();
 
   // 投稿者表示をログインユーザー名にセット
   document.getElementById('memo-author-display').textContent = formatName(currentUser);
@@ -24400,6 +24410,7 @@ function selectMemoFacility(id) {
 
 function closeMemoSheet() {
   document.getElementById('memo-overlay').classList.remove('open');
+  resetMemoPhotos();
 }
 function closeMemoSheetIfBg(e) {
   const overlay = document.getElementById('memo-overlay');
@@ -24411,6 +24422,76 @@ function closeMemoSheetIfBg(e) {
   closeMemoSheet();
 }
 
+// ============================
+//  MEMO PHOTO UPLOAD
+// ============================
+let memoSelectedPhotos = []; // [{ file, previewUrl }]
+
+function handleMemoPhotoSelect(event) {
+  const files = [...(event.target.files || [])];
+  event.target.value = ''; // 同じファイルを選び直せるようにクリアしておく
+  files.forEach(file => {
+    if (!file.type || !file.type.startsWith('image/')) return;
+    memoSelectedPhotos.push({ file, previewUrl: URL.createObjectURL(file) });
+  });
+  renderMemoPhotoPreviews();
+}
+
+function removeMemoPhoto(index) {
+  const removed = memoSelectedPhotos.splice(index, 1)[0];
+  if (removed) URL.revokeObjectURL(removed.previewUrl);
+  renderMemoPhotoPreviews();
+}
+
+function renderMemoPhotoPreviews() {
+  const wrap = document.getElementById('memo-photo-previews');
+  const hint = document.getElementById('memo-photo-hint');
+  if (!wrap) return;
+  wrap.innerHTML = memoSelectedPhotos.map((p, i) => `
+    <div style="position:relative;width:64px;height:64px;">
+      <img src="${p.previewUrl}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
+      <button type="button" onclick="event.stopPropagation();removeMemoPhoto(${i})" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#e04b4b;color:#fff;border:none;font-size:12px;line-height:20px;padding:0;cursor:pointer;">✕</button>
+    </div>
+  `).join('');
+  if (hint) hint.textContent = memoSelectedPhotos.length > 0 ? `${memoSelectedPhotos.length}枚選択中（タップして追加）` : 'タップして写真を追加';
+}
+
+function resetMemoPhotos() {
+  memoSelectedPhotos.forEach(p => URL.revokeObjectURL(p.previewUrl));
+  memoSelectedPhotos = [];
+  renderMemoPhotoPreviews();
+}
+
+// 画像を長辺2000px以内・JPEG品質0.85に縮小/圧縮し、base64のdataURLにして返す。
+// 長辺が2000px以下の画像はリサイズせずそのまま圧縮のみ行う（拡大はしない）。
+function resizeAndCompressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('ファイルの読み込みに失敗しました'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('画像の読み込みに失敗しました'));
+      img.onload = () => {
+        const MAX_SIDE = 2000;
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const longSide = Math.max(w, h);
+        if (longSide > MAX_SIDE) {
+          const scale = MAX_SIDE / longSide;
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function postMemo() {
   const text = document.getElementById('memo-text').value.trim();
   const author = currentUser;
@@ -24419,13 +24500,30 @@ async function postMemo() {
   if (!memoTargetId) { showToast('施設が選択されていません'); return; }
   const f = FACILITIES.find(x => x.id === memoTargetId);
   if (!f) return;
+
+  const photosToUpload = memoSelectedPhotos.slice();
+  const postBtn = document.getElementById('memo-post-btn');
+  let photosBase64 = [];
+  if (photosToUpload.length > 0) {
+    if (postBtn) { postBtn.disabled = true; postBtn.textContent = `📤 アップロード中…（${photosToUpload.length}枚）`; }
+    try {
+      photosBase64 = await Promise.all(photosToUpload.map(p => resizeAndCompressImage(p.file)));
+    } catch (e) {
+      console.warn('写真の変換に失敗:', e);
+      showToast('⚠️ 写真の処理に失敗しました。写真なしで投稿するか、やり直してください');
+      if (postBtn) { postBtn.disabled = false; postBtn.textContent = '投稿する'; }
+      return;
+    }
+    if (postBtn) { postBtn.disabled = false; postBtn.textContent = '投稿する'; }
+  }
+
   const today = new Date();
   const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
   const dateStrSlash = dateStr.replace(/-/g, '/');
   f.timeline.push({ author, date: dateStr, text });
   saveTimeline(f.id, f.timeline);
   closeMemoSheet();
-  showToast('✅ タイムラインを投稿しました');
+  showToast(photosBase64.length > 0 ? '✅ タイムラインを投稿しました（写真を反映中…）' : '✅ タイムラインを投稿しました');
   const targetId = memoTargetId;
   await postTimelineToGAS({
     facilityId: f.id,
@@ -24433,12 +24531,15 @@ async function postMemo() {
     text,
     date: dateStrSlash,
     author,
+    photos: photosBase64,
   });
-  // no-corsではPOSTの完了タイミングしか分からず、GAS側（スプレッドシート）への反映に
-  // 多少ラグが出ることがあるため、1秒待ってから最新タイムラインを取得し直す
+  // no-corsではPOSTの完了タイミングしか分からず、GAS側（スプレッドシート・Driveへの保存）への
+  // 反映に多少ラグが出ることがあるため、少し待ってから最新タイムラインを取得し直す。
+  // 写真がある場合はDriveへの保存に時間がかかるため、枚数に応じて待ち時間を延ばす。
+  const waitMs = photosBase64.length > 0 ? Math.min(1000 + photosBase64.length * 800, 6000) : 1000;
   if (currentFacilityId === targetId) {
     renderDetailScreen(f);
-    setTimeout(() => refreshTimelineFromGAS(targetId), 1000);
+    setTimeout(() => refreshTimelineFromGAS(targetId), waitMs);
   } else {
     renderList();
   }
@@ -24842,7 +24943,8 @@ function normalizeTimelineEntryFromApi(row) {
   const rawDate = row['確認年月日'];
   const dateStr = typeof rawDate === 'string' ? rawDate.slice(0, 10) : '';
 
-  const photo = row['写真URL'] || '';
+  // 写真URL列は複数枚の場合カンマ区切りで入る
+  const photos = String(row['写真URL'] || '').split(',').map(s => s.trim()).filter(Boolean);
 
   return {
     id: row['投稿ID'] || '',
@@ -24851,8 +24953,8 @@ function normalizeTimelineEntryFromApi(row) {
     date: dateStr,
     dateStr,
     text: String(text),
-    photo,
-    hasPhoto: !!photo,
+    photos,
+    hasPhoto: photos.length > 0,
   };
 }
 
