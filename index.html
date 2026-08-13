@@ -677,6 +677,39 @@
     background: var(--bg);
     display: block;
   }
+  .photo-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .photo-gallery-item {
+    position: relative;
+    aspect-ratio: 1 / 1;
+  }
+  .photo-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    display: block;
+  }
+  .photo-gallery-delete {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #e04b4b;
+    color: #fff;
+    border: none;
+    font-size: 12px;
+    line-height: 22px;
+    padding: 0;
+    cursor: pointer;
+  }
   .sys-notice {
     font-size: 11px;
     color: var(--text-muted);
@@ -1622,7 +1655,7 @@
         👤 <span id="memo-author-display" style="color:var(--accent);font-weight:600;"></span> として投稿します
       </div>
       <div class="field-label">写真（省略可）</div>
-      <input type="file" id="memo-photo-input" accept="image/*" multiple capture="environment" style="display:none;" onchange="handleMemoPhotoSelect(event)">
+      <input type="file" id="memo-photo-input" accept="image/*" multiple style="display:none;" onchange="handleMemoPhotoSelect(event)">
       <div class="photo-upload-area" onclick="document.getElementById('memo-photo-input').click()">
         <div class="icon">📷</div>
         <div id="memo-photo-hint">タップして写真を追加</div>
@@ -1647,6 +1680,19 @@
     </div>
     <div class="sheet-footer">
       <button class="btn-post" onclick="saveEdit()">更新して保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FACILITY PHOTO GALLERY ===== -->
+<div class="sheet-overlay" id="photo-gallery-overlay" onclick="closePhotoGalleryIfBg(event)">
+  <div class="memo-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">📷 施設の写真</div>
+      <button class="sheet-close" onclick="closePhotoGallery()">✕</button>
+    </div>
+    <div class="sheet-body" id="photo-gallery-body">
     </div>
   </div>
 </div>
@@ -24028,7 +24074,7 @@ function renderDetailScreen(f) {
       </div>
     </a>
     <div class="photo-strip">
-      <div class="photo-thumb" onclick="showPhotoComingSoon()" style="cursor:pointer;" title="写真">📸</div>
+      <div class="photo-thumb" onclick="openFacilityPhotoGallery('${f.id}')" style="cursor:pointer;" title="写真">📸</div>
       <div class="photo-add" onclick="showPhotoComingSoon()" style="cursor:pointer;" title="写真を追加">➕</div>
     </div>
 
@@ -24153,6 +24199,122 @@ async function deleteTimelineOnGAS(postId, entry) {
       console.warn('GAS 削除に失敗:', e2);
       return false;
     }
+  }
+}
+
+// ============================
+//  FACILITY PHOTO GALLERY
+// ============================
+let photoGalleryFacilityId = null;
+
+// 施設のタイムライン全投稿から写真だけを集める（新しい順）。個別削除のためpostIdを紐付ける。
+function collectFacilityPhotos(f) {
+  const items = [];
+  [...(f.timeline || [])].reverse().forEach(t => {
+    (t.photos || []).forEach(url => {
+      items.push({ postId: t.id, author: t.author, url });
+    });
+  });
+  return items;
+}
+
+function openFacilityPhotoGallery(facilityId) {
+  photoGalleryFacilityId = facilityId;
+  renderPhotoGallery();
+  document.getElementById('photo-gallery-overlay').classList.add('open');
+  // 開いた時点のタイムラインが古い可能性があるため、最新を取得して再描画する
+  fetchTimelineFromGAS(facilityId).then(data => {
+    if (!data || photoGalleryFacilityId !== facilityId) return;
+    const f = FACILITIES.find(x => x.id === facilityId);
+    if (!f) return;
+    f.timeline = data.map(normalizeTimelineEntryFromApi).filter(Boolean);
+    renderPhotoGallery();
+    if (currentFacilityId === facilityId) renderDetailScreen(f);
+  });
+}
+
+function closePhotoGallery() {
+  document.getElementById('photo-gallery-overlay').classList.remove('open');
+  photoGalleryFacilityId = null;
+}
+function closePhotoGalleryIfBg(e) {
+  if (e.target === document.getElementById('photo-gallery-overlay')) closePhotoGallery();
+}
+
+function renderPhotoGallery() {
+  const body = document.getElementById('photo-gallery-body');
+  if (!body) return;
+  const f = FACILITIES.find(x => x.id === photoGalleryFacilityId);
+  if (!f) { body.innerHTML = ''; return; }
+  const photos = collectFacilityPhotos(f);
+  if (photos.length === 0) {
+    body.innerHTML = `<div class="history-empty">📷 まだ写真が投稿されていません</div>`;
+    return;
+  }
+  body.innerHTML = `<div class="photo-gallery-grid">${photos.map(p => `
+    <div class="photo-gallery-item">
+      <a href="${escapeAttr(p.url)}" target="_blank" rel="noopener"><img src="${escapeAttr(p.url)}" loading="lazy" alt="施設の写真"></a>
+      <button type="button" class="photo-gallery-delete" onclick="event.stopPropagation();confirmDeletePhoto('${escapeAttr(p.postId)}','${escapeAttr(p.url)}')" title="削除">✕</button>
+    </div>
+  `).join('')}</div>`;
+}
+
+function confirmDeletePhoto(postId, url) {
+  const f = FACILITIES.find(x => x.id === photoGalleryFacilityId);
+  const t = f && (f.timeline || []).find(x => x.id === postId);
+  if (!t) { showToast('対象の投稿が見つかりません'); return; }
+  if (!canDeleteTimeline(t)) { showToast('この写真を削除する権限がありません'); return; }
+  if (!confirm('この写真を削除しますか？\n\n削除すると元に戻せません。')) return;
+  deletePhotoFlow(postId, url);
+}
+
+async function deletePhotoFlow(postId, url) {
+  const f = FACILITIES.find(x => x.id === photoGalleryFacilityId);
+  if (!f) return;
+  const entry = (f.timeline || []).find(x => x.id === postId);
+  if (!entry || !entry.photos) return;
+  const idx = entry.photos.indexOf(url);
+  if (idx === -1) return;
+
+  // 楽観的UI：先に取り除いて再描画し、失敗したら元に戻す
+  entry.photos.splice(idx, 1);
+  entry.hasPhoto = entry.photos.length > 0;
+  renderPhotoGallery();
+  if (currentFacilityId === photoGalleryFacilityId) renderDetailScreen(f);
+
+  const ok = await deletePhotoOnGAS(postId, url);
+  if (!ok) {
+    entry.photos.splice(idx, 0, url);
+    entry.hasPhoto = entry.photos.length > 0;
+    renderPhotoGallery();
+    if (currentFacilityId === photoGalleryFacilityId) renderDetailScreen(f);
+    showToast('⚠️ 写真の削除に失敗しました。通信状況を確認してください');
+    return;
+  }
+  showToast('🗑 写真を削除しました');
+}
+
+async function deletePhotoOnGAS(postId, url) {
+  const body = JSON.stringify({
+    action: 'deletePhoto',
+    postId: postId,
+    photoUrl: url,
+    requestedBy: currentUser || '',
+    asAdmin: isAdminSession === true,
+  });
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body,
+    });
+    const data = await res.json();
+    if (data && data.error) { console.warn('GAS 写真削除エラー:', data.error); showToast('⚠️ ' + data.error); return false; }
+    return !!(data && data.success);
+  } catch (e) {
+    console.warn('写真削除リクエストに失敗:', e);
+    return false;
   }
 }
 

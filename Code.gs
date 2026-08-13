@@ -13,6 +13,9 @@ const HEADER_ROWS = {
   TIMELINE: 2,
 };
 
+// タイムライン投稿に添付する写真の保存先（Google Driveフォルダ「finder_photos」、事前に手動作成済み）
+const PHOTO_FOLDER_ID = '1kB8ixkgfcHtMVvvgljqJwc4yMpDUhZNK';
+
 function jsonResponse(data) {
   const output = ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
@@ -225,7 +228,34 @@ function timelineColumns(sheet) {
     facilityId: col['施設固有ID'] || 0,
     text: col['投稿テキスト'] || 0,
     author: col['投稿者名'] || 0,
+    photoUrl: col['写真URL'] || 0,
   };
+}
+
+// 写真URL（https://drive.google.com/uc?id={fileId} 形式）からDriveファイルIDを取り出す
+function extractDriveFileId(url) {
+  const m = String(url || '').match(/[?&]id=([^&]+)/);
+  return m ? m[1] : '';
+}
+
+// カンマ区切りの写真URL文字列を受け取り、対応するDriveファイルをすべてゴミ箱へ移動する。
+// 「リンクを知っている全員が閲覧可」の共有設定はゴミ箱に移動しただけでは解除されず、
+// リンク経由でアクセスできてしまうため、ゴミ箱へ移動する前に共有を非公開へ戻す。
+// （完全な物理削除ではなくゴミ箱移動にとどめているのは、誤操作時にオーナーが
+// 　Drive側から手動で復元できる余地を残すため）
+// 1件の失敗（既に削除済み・IDが不正等）で全体を止めないよう、ファイルごとにtry/catchする。
+function trashDrivePhotosByUrls(urlsCsv) {
+  String(urlsCsv || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean).forEach(function (url) {
+    const fileId = extractDriveFileId(url);
+    if (!fileId) return;
+    try {
+      const file = DriveApp.getFileById(fileId);
+      file.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
+      file.setTrashed(true);
+    } catch (e) {
+      Logger.log('写真の削除に失敗（続行します）: ' + url + ' / ' + e);
+    }
+  });
 }
 
 // 投稿IDを「既存IDの最大値＋1」で採番する。
@@ -243,6 +273,30 @@ function nextPostId(sheet, postIdCol) {
   return 'P' + String(maxSeq + 1).padStart(5, '0');
 }
 
+// タイムライン投稿に添付された写真（リサイズ・圧縮済みのJPEG base64データURL配列）をDriveへ保存し、
+// 表示用URLをカンマ区切りの文字列にして返す。ファイル名は {施設ID}_{タイムスタンプ}_{連番}.jpg。
+//
+// 注意：doPostの実行時間には上限があるため、一度に大量（目安10枚以上）の写真を送ると
+// タイムアウトする可能性がある。base64化された画像は元データの約1.37倍のサイズになるため、
+// POSTペイロードが大きくなりすぎないようフロント側でリサイズ・圧縮してから送る前提。
+function savePhotosToDrive(facilityId, photosBase64Array) {
+  const folder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
+  const timestamp = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyyMMddHHmmss');
+  const urls = [];
+
+  photosBase64Array.forEach(function (dataUrl, i) {
+    if (!dataUrl) return;
+    const base64 = String(dataUrl).replace(/^data:image\/\w+;base64,/, '');
+    const fileName = facilityId + '_' + timestamp + '_' + (i + 1) + '.jpg';
+    const blob = Utilities.newBlob(Utilities.base64Decode(base64), 'image/jpeg', fileName);
+    const file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    urls.push('https://drive.google.com/uc?id=' + file.getId());
+  });
+
+  return urls.join(',');
+}
+
 function postTimeline(payload) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(SHEET_NAMES.TIMELINE);
@@ -254,6 +308,12 @@ function postTimeline(payload) {
   const cols = timelineColumns(sheet);
   const postId = nextPostId(sheet, cols.postId);
 
+  // 写真が添付されている場合はDriveへ保存し、URLをカンマ区切りで写真URL列へ記録する
+  let photoUrls = '';
+  if (payload.photos && payload.photos.length > 0) {
+    photoUrls = savePhotosToDrive(payload.facilityId || postId, payload.photos);
+  }
+
   // ③口コミ・タイムラインシートの実際の列順：
   // 投稿ID / 施設固有ID / 施設名（参照用） / 投稿テキスト / 写真URL / 確認年月日 / 投稿者名 / システム通知フラグ
   const row = [
@@ -261,14 +321,14 @@ function postTimeline(payload) {
     payload.facilityId || '',
     payload.facilityName || '',
     payload.text || '',
-    '',
+    photoUrls,
     payload.date || '',
     payload.author || '',
     '',
   ];
 
   sheet.appendRow(row);
-  return { success: true, postId: postId };
+  return { success: true, postId: postId, photoCount: photoUrls ? photoUrls.split(',').length : 0 };
 }
 
 // ③口コミ・タイムラインから投稿を1件削除する。
@@ -322,10 +382,62 @@ function deleteTimeline(payload) {
     return { success: true, dryRun: true, postId: postId, row: rowNum, deleted: snapshot };
   }
 
+  // 添付写真があればDrive上の実ファイルもゴミ箱へ移動する（失敗しても行削除は続行する）
+  if (cols.photoUrl) {
+    trashDrivePhotosByUrls(target[cols.photoUrl - 1]);
+  }
+
   sheet.deleteRow(rowNum);
   Logger.log('行' + rowNum + ' を削除しました。残り件数: ' + Math.max(0, sheet.getLastRow() - HEADER_ROWS.TIMELINE));
 
   return { success: true, postId: postId, row: rowNum, deleted: snapshot };
+}
+
+// ③口コミ・タイムラインの1投稿から、写真を1枚だけ取り除く（投稿テキスト自体は残す）。
+// 対応するDrive上の実ファイルもゴミ箱へ移動する。
+//
+// 権限の考え方はdeleteTimelineと同じ：投稿者本人か管理者操作のみ許可する（誤操作防止目的）。
+function deletePhoto(payload) {
+  const postId = String(payload.postId || '').trim();
+  const photoUrl = String(payload.photoUrl || '').trim();
+  if (!postId) throw new Error('postId が指定されていません');
+  if (!photoUrl) throw new Error('photoUrl が指定されていません');
+
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_NAMES.TIMELINE);
+  if (!sheet) throw new Error('③口コミ・タイムラインシートが見つかりません');
+
+  const cols = timelineColumns(sheet);
+  if (!cols.postId || !cols.photoUrl) throw new Error('必要な列（投稿ID/写真URL）が見つかりません');
+
+  const values = sheet.getDataRange().getValues();
+  let rowNum = 0;
+  for (let r = HEADER_ROWS.TIMELINE; r < values.length; r++) {
+    if (String(values[r][cols.postId - 1]).trim() === postId) { rowNum = r + 1; break; }
+  }
+  if (!rowNum) throw new Error('該当する投稿が見つかりません: ' + postId);
+
+  const target = values[rowNum - 1];
+  const author = cols.author ? String(target[cols.author - 1] || '').trim() : '';
+
+  const requestedBy = String(payload.requestedBy || '').trim();
+  const asAdmin = payload.asAdmin === true || payload.asAdmin === 'true';
+  if (!asAdmin && author && requestedBy !== author) {
+    throw new Error('投稿者本人ではないため削除できません（投稿者: ' + author + ' / 操作者: ' + (requestedBy || '不明') + '）');
+  }
+
+  const currentUrls = String(target[cols.photoUrl - 1] || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+  const remaining = currentUrls.filter(function (u) { return u !== photoUrl; });
+  if (remaining.length === currentUrls.length) {
+    throw new Error('指定された写真が見つかりません: ' + photoUrl);
+  }
+
+  trashDrivePhotosByUrls(photoUrl);
+  sheet.getRange(rowNum, cols.photoUrl).setValue(remaining.join(','));
+
+  Logger.log('写真を1枚削除しました。投稿ID: ' + postId + ' / 残り枚数: ' + remaining.length);
+
+  return { success: true, postId: postId, remainingCount: remaining.length };
 }
 
 function doGet(e) {
@@ -368,8 +480,10 @@ function doPost(e) {
       data = updateFacilityDetail(payload);
     } else if (action === 'deleteTimeline') {
       data = deleteTimeline(payload);
+    } else if (action === 'deletePhoto') {
+      data = deletePhoto(payload);
     } else {
-      data = { error: 'Unknown action. Use action=postTimeline, updateFacilityDetail or deleteTimeline' };
+      data = { error: 'Unknown action. Use action=postTimeline, updateFacilityDetail, deleteTimeline or deletePhoto' };
     }
 
     return jsonResponse(data);
