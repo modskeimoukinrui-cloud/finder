@@ -24711,6 +24711,13 @@ function escapeAttr(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// textareaの高さを入力内容に合わせて自動調整する（上限なし）
+function autoResizeTextarea(el) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
 // ケア体制の選択肢。実データには 〇/要相談 以外に ×・日中常駐・24H常駐・その他 が入るため、
 // それらを選択肢に含める。想定外の値が入っていた場合も選択肢として復元し、
 // 編集画面を開いただけで既存の値が失われないようにする。
@@ -24782,7 +24789,7 @@ function openEditSheet(id) {
     </div>
     <div style="padding:8px 0;border-bottom:1px solid var(--border);">
       <div class="field-label" style="margin-top:0;">信頼性・特記事項</div>
-      <input type="text" class="field-input" id="edit-costNote" value="${f.costNote||''}" placeholder="例：2026年5月 施設長様より対面確認" style="width:100%;margin-top:4px;">
+      <textarea class="field-input" id="edit-costNote" placeholder="例：2026年5月 施設長様より対面確認" style="width:100%;margin-top:4px;min-height:38px;resize:none;overflow:hidden;" oninput="autoResizeTextarea(this)">${escapeAttr(f.costNote || '')}</textarea>
     </div>
     <div class="field-label" style="margin-top:14px;">ケア体制・医療ケア</div>
     ${careRows}
@@ -24794,6 +24801,10 @@ function openEditSheet(id) {
   `;
 
   document.getElementById('edit-overlay').classList.add('open');
+
+  // 既存の長文が入っている場合も、開いた時点で高さを内容に合わせて調整する
+  // （display:noneの間はscrollHeightが取れないため、シートを開いた後に呼ぶ）
+  autoResizeTextarea(document.getElementById('edit-costNote'));
 }
 
 function closeEditSheet() {
