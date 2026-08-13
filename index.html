@@ -23853,6 +23853,16 @@ async function calcDistances() {
   showToast('✅ 直線距離の計算が完了しました');
 }
 
+// 新着順ソートの基準日：②シートの最終更新日時と、③シート現存投稿（削除済みは含まれない）の
+// 確認年月日のうち、より新しい方を返す。どちらも無ければ空文字（＝未更新・未投稿）。
+function latestActivityDate(f) {
+  let latest = f.lastUpdated || '';
+  (f.timeline || []).forEach(t => {
+    if (t.date && t.date > latest) latest = t.date;
+  });
+  return latest;
+}
+
 function renderList() {
   const rawKeyword = (document.getElementById('main-search').value || '').trim();
   const keyword = normalizeJa(rawKeyword);
@@ -23899,15 +23909,18 @@ function renderList() {
       return (a.costMin - b.costMin) * sortDir;
     });
   } else if (sortMode === 'memo') {
-    // 新着順：②シートの「最終更新日時」列（費用・ケア体制・空床状況のいずれかが
-    // 実際に変更されたときだけ更新される）を基準に降順で並べる。未更新は常に末尾。
+    // 新着順：②シートの「最終更新日時」（施設情報更新）と、③シート現存投稿の「確認年月日」の
+    // うち、より新しい方を基準に降順で並べる。施設情報更新・タイムライン投稿のどちらも
+    // 等しく「新着」として拾うため（SWによってどちらを使うか異なるため）。未更新・未投稿は常に末尾。
     filtered.sort((a, b) => {
-      const aUnknown = !a.lastUpdated;
-      const bUnknown = !b.lastUpdated;
+      const aDate = latestActivityDate(a);
+      const bDate = latestActivityDate(b);
+      const aUnknown = !aDate;
+      const bUnknown = !bDate;
       if (aUnknown && bUnknown) return 0;
       if (aUnknown) return 1;
       if (bUnknown) return -1;
-      return b.lastUpdated.localeCompare(a.lastUpdated) * sortDir;
+      return bDate.localeCompare(aDate) * sortDir;
     });
   } else if (sortMode === 'vacancy') {
     const ORDER = { 'available': 0, 'soon': 1, 'full': 2, '': 3 };
@@ -25077,6 +25090,32 @@ async function fetchFacilitiesFromGAS() {
   }
 }
 
+// 起動時：③口コミ・タイムラインを全件まとめて取得し、施設ごとにグルーピングしてf.timelineへ反映する。
+// 新着順ソート（施設情報更新とタイムライン投稿のどちらも等しく拾う）のために、
+// 個別に施設を開いていない施設についても投稿の有無・確認年月日を把握できるようにする。
+// 個別施設を開いた際のrefreshTimelineFromGAS()は、この上でさらに最新化するために引き続き動作する。
+async function fetchAllTimelinesFromGAS() {
+  try {
+    const res = await fetch(`${GAS_URL}?action=timeline`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data && data.error) throw new Error(data.error);
+    if (!Array.isArray(data)) return false;
+
+    const byFacility = {};
+    data.forEach(row => {
+      const entry = normalizeTimelineEntryFromApi(row);
+      if (!entry || !entry.facilityId) return;
+      (byFacility[entry.facilityId] = byFacility[entry.facilityId] || []).push(entry);
+    });
+    FACILITIES.forEach(f => { f.timeline = byFacility[f.id] || []; });
+    return true;
+  } catch (e) {
+    console.warn('タイムライン一括取得に失敗、localStorageのキャッシュにフォールバックします:', e);
+    return false;
+  }
+}
+
 // GASの口コミ・タイムライン行を、アプリ内部で使うtimelineエントリの形に正規化する。
 // ③口コミ・タイムラインシートの実列名：投稿ID / 施設固有ID / 投稿テキスト / 投稿者名 / 確認年月日 / 写真URL
 function normalizeTimelineEntryFromApi(row) {
@@ -25173,7 +25212,8 @@ function loadAllTimelines() {
 // ============================
 async function initApp() {
   await fetchFacilitiesFromGAS();
-  loadAllTimelines();
+  const timelinesOk = await fetchAllTimelinesFromGAS();
+  if (!timelinesOk) loadAllTimelines();
   loadCoordCache();
   initLoginScreen();
 
