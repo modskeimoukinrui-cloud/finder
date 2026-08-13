@@ -1531,33 +1531,19 @@
     <div class="filter-section-title">ケア体制</div>
     <div class="filter-tags">
       <span class="filter-tag" onclick="toggleTag(this,'care')">生活保護</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">生活保護：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">看取り</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">看取り：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">24h看護師</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">24h看護師：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">インスリン</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">インスリン：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">褥瘡</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">褥瘡：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">バルーン</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">バルーン：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">胃瘻</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">胃瘻：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">点滴</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">点滴：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">IVH</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">IVH：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">吸引</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">吸引：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">酸素</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">酸素：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">気管切開</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">気管切開：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">人工呼吸器</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">人工呼吸器：その他</span>
       <span class="filter-tag" onclick="toggleTag(this,'care')">透析</span>
-      <span class="filter-tag" onclick="toggleTag(this,'care')" style="opacity:.7;font-size:12px;">透析：その他</span>
     </div>
     <div class="filter-section-title">月額費用（円）</div>
     <div class="cost-range">
@@ -23766,12 +23752,10 @@ function getMainFilteredList() {
     if (activeCareFilters.length > 0) {
       const careMap = { "生活保護":"seikatsuHogo","看取り":"mitomori","24h看護師":"kango24h","インスリン":"insulin","褥瘡":"jokuso","バルーン":"balloon","胃瘻":"irou","点滴":"tenteki","IVH":"ivh","吸引":"kyuin","酸素":"sanso","気管切開":"kissetsu","人工呼吸器":"kokyuki","透析":"toseki" };
       for (const label of activeCareFilters) {
-        const isOther = label.endsWith('：その他');
-        const key = careMap[isOther ? label.slice(0, -'：その他'.length) : label];
+        const key = careMap[label];
         if (!key) continue;
         const val = f.care[key] || "";
-        if (isOther) { if (val !== "その他") return false; }
-        else { if (!val || val === "×") return false; }
+        if (!val || val === "×") return false;
       }
     }
     return true;
@@ -24428,8 +24412,7 @@ const CARE_FILTER_LABELS = ["生活保護","看取り","24h看護師","インス
 function toggleTag(el, group) {
   el.classList.toggle('active');
   if (group === 'care') {
-    const allowed = CARE_FILTER_LABELS.concat(CARE_FILTER_LABELS.map(l => l + '：その他'));
-    activeCareFilters = [...document.querySelectorAll('#filter-panel .filter-tag.active')].map(e => e.textContent).filter(t => allowed.includes(t));
+    activeCareFilters = [...document.querySelectorAll('#filter-panel .filter-tag.active')].map(e => e.textContent).filter(t => CARE_FILTER_LABELS.includes(t));
   } else {
     activeWardFilters = [...document.querySelectorAll('#ward-filters .filter-tag.active')].map(e => e.textContent);
   }
@@ -25285,12 +25268,10 @@ function getFilteredForMap() {
     if (activeCareFilters.length > 0) {
       const careMap = {"生活保護":"seikatsuHogo","看取り":"mitomori","24h看護師":"kango24h","インスリン":"insulin","褥瘡":"jokuso","バルーン":"balloon","胃瘻":"irou","点滴":"tenteki","IVH":"ivh","吸引":"kyuin","酸素":"sanso","気管切開":"kissetsu","人工呼吸器":"kokyuki","透析":"toseki"};
       for (const label of activeCareFilters) {
-        const isOther = label.endsWith('：その他');
-        const key = careMap[isOther ? label.slice(0, -'：その他'.length) : label];
+        const key = careMap[label];
         if (!key) continue;
         const val = (f.care && f.care[key]) || "";
-        if (isOther) { if (val !== "その他") return false; }
-        else { if (!val || val === "x" || val === "×") return false; }
+        if (!val || val === "x" || val === "×") return false;
       }
     }
     return true;
