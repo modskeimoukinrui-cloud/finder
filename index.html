@@ -24048,7 +24048,7 @@ function renderDetailScreen(f) {
     [...f.timeline].reverse().map(t => {
       const initials = t.author ? t.author.charAt(0) : '?';
       const photosHtml = (t.photos && t.photos.length > 0)
-        ? `<div class="timeline-photos">${t.photos.map(url => `<a href="${escapeAttr(url)}" target="_blank" rel="noopener"><img src="${escapeAttr(url)}" class="timeline-photo-thumb" loading="lazy" alt="投稿写真"></a>`).join('')}</div>`
+        ? `<div class="timeline-photos">${t.photos.map(url => `<a href="${escapeAttr(url)}" target="_blank" rel="noopener"><img src="${escapeAttr(driveThumbUrl(url, 300))}" class="timeline-photo-thumb" loading="lazy" alt="投稿写真"></a>`).join('')}</div>`
         : '';
       const item = `<div class="timeline-item"><div class="timeline-avatar">${initials}</div><div class="timeline-body"><div class="timeline-meta"><span class="timeline-author">${escapeAttr(t.author || '')}</span><span class="timeline-date">${escapeAttr(t.date || '')}</span></div><div class="timeline-text">${t.text}</div>${photosHtml}</div></div>`;
       // 削除できない投稿はスワイプの仕掛けを付けずにそのまま表示する
@@ -24072,7 +24072,7 @@ function renderDetailScreen(f) {
     </a>
     <div class="photo-strip">
       <div class="photo-thumb" onclick="openFacilityPhotoGallery('${f.id}')" style="cursor:pointer;" title="写真">📸</div>
-      <div class="photo-add" onclick="showPhotoComingSoon()" style="cursor:pointer;" title="写真を追加">➕</div>
+      <div class="photo-add" onclick="openMemoSheet('${f.id}')" style="cursor:pointer;" title="写真を追加">➕</div>
     </div>
 
     <div class="detail-section">
@@ -24250,7 +24250,7 @@ function renderPhotoGallery() {
   }
   body.innerHTML = `<div class="photo-gallery-grid">${photos.map(p => `
     <div class="photo-gallery-item">
-      <a href="${escapeAttr(p.url)}" target="_blank" rel="noopener"><img src="${escapeAttr(p.url)}" loading="lazy" alt="施設の写真"></a>
+      <a href="${escapeAttr(p.url)}" target="_blank" rel="noopener"><img src="${escapeAttr(driveThumbUrl(p.url, 300))}" loading="lazy" alt="施設の写真"></a>
       <button type="button" class="photo-gallery-delete" onclick="event.stopPropagation();confirmDeletePhoto('${escapeAttr(p.postId)}','${escapeAttr(p.url)}')" title="削除">✕</button>
     </div>
   `).join('')}</div>`;
@@ -24709,6 +24709,16 @@ async function postMemo() {
 // 属性値に埋め込む文字列をエスケープする
 function escapeAttr(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Drive共有URL（https://drive.google.com/uc?id=... 形式、保存・フルサイズ表示・削除時の
+// ファイルID抽出に使う正の形式）は、他ドメインの<img>から直接埋め込むと読み込みに失敗する
+// （クロスオリジンでの画像読み込みがブロックされる既知の制限）。サムネイル表示のときだけ、
+// 埋め込み用のGoogle thumbnailエンドポイントに変換して使う。
+function driveThumbUrl(url, size) {
+  const m = String(url || '').match(/[?&]id=([^&]+)/);
+  if (!m) return url;
+  return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w${size || 400}`;
 }
 
 // textareaの高さを入力内容に合わせて自動調整する（上限なし）
