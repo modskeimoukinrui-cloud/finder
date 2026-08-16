@@ -440,6 +440,89 @@ function deletePhoto(payload) {
   return { success: true, postId: postId, remainingCount: remaining.length };
 }
 
+// ①②シート双方をスキャンし、施設固有IDの数値部分の最大値+1をF0001形式で返す。
+// タイムライン投稿ID（nextPostId）と同じ「既存最大値+1」方式。
+function nextFacilityId(ss) {
+  const sheets = [ss.getSheetByName(SHEET_NAMES.MASTER), ss.getSheetByName(SHEET_NAMES.DETAIL)];
+  let maxNum = 0;
+  sheets.forEach(function (sheet) {
+    if (!sheet) return;
+    const headerRow = HEADER_ROWS.MASTER; // ①②とも2行目
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= headerRow) return;
+    const headers = sheet.getRange(headerRow, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const idCol = headers.findIndex(function (h) { return squashKey(h).indexOf('ID') !== -1; }) + 1;
+    if (!idCol) return;
+    const ids = sheet.getRange(headerRow + 1, idCol, lastRow - headerRow, 1).getValues();
+    ids.forEach(function (r) {
+      const m = String(r[0] === null || r[0] === undefined ? '' : r[0]).match(/(\d+)/);
+      if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+    });
+  });
+  return 'F' + String(maxNum + 1).padStart(4, '0');
+}
+
+// 列名（表記ゆれはsquashKeyで吸収）に従って値をセットした行を作り、appendRowする。
+// 該当する列が無いキーは黙って無視する。
+function appendRowByColumnNames(sheet, headerRow, valuesByColName) {
+  const headers = sheet.getRange(headerRow, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const row = new Array(headers.length).fill('');
+  headers.forEach(function (h, i) {
+    const key = Object.keys(valuesByColName).find(function (k) { return squashKey(k) === squashKey(h); });
+    if (key !== undefined) row[i] = valuesByColName[key];
+  });
+  sheet.appendRow(row);
+}
+
+// 新規施設を①施設マスター・②施設詳細ケア体制の両方に登録する。
+// ID採番とマスター行・詳細行の最小限の追加はここで行い、費用・ケア体制など
+// フォームで入力された詳細項目の書き込みは既存のupdateFacilityDetail()にそのまま委譲する
+// （変更検知・各種更新日の記録ロジックを再利用するため）。
+function addFacility(payload) {
+  const name = String(payload.name || '').trim();
+  if (!name) throw new Error('施設名が指定されていません');
+
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const masterSheet = ss.getSheetByName(SHEET_NAMES.MASTER);
+  const detailSheet = ss.getSheetByName(SHEET_NAMES.DETAIL);
+  if (!masterSheet) throw new Error('①施設マスターシートが見つかりません');
+  if (!detailSheet) throw new Error('②施設詳細・ケア体制シートが見つかりません');
+
+  const facilityId = nextFacilityId(ss);
+  const idNumMatch = facilityId.match(/(\d+)/);
+  const idNum = idNumMatch ? String(parseInt(idNumMatch[1], 10)) : '';
+  const registeredBy = String(payload.registeredBy || '').trim();
+  const now = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd HH:mm:ss');
+
+  appendRowByColumnNames(masterSheet, HEADER_ROWS.MASTER, {
+    '施設固有ID【変更禁止】': facilityId,
+    '通し番号': idNum,
+    'データソース': 'アプリ登録',
+    '施設名': name,
+    '施設類型': payload.type || '',
+    '所在地': payload.address || '',
+    '行政区': payload.ward || '',
+    '電話番号': payload.tel || '',
+    '更新事由': '新規登録' + (registeredBy ? '（' + registeredBy + '）' : ''),
+  });
+
+  // 最終更新日時・最終更新者はここで無条件にセットする（詳細項目を何も入力せず
+  // 登録した場合でも新着順ソートに乗るように。個別項目の更新日はこの後の
+  // updateFacilityDetail()が、実際に値が入っていれば記録する）
+  appendRowByColumnNames(detailSheet, HEADER_ROWS.DETAIL, {
+    '施設固有ID【変更禁止】': facilityId,
+    '施設名（参照用）': name,
+    '運用ステータス（運用中／廃止）': '運用中',
+    '最終更新日時': now,
+    '最終更新者': registeredBy,
+  });
+
+  const detailPayload = Object.assign({}, payload, { facilityId: facilityId, updatedBy: registeredBy });
+  updateFacilityDetail(detailPayload);
+
+  return { success: true, facilityId: facilityId };
+}
+
 function doGet(e) {
   const params = e.parameter || {};
   const action = params.action || '';
@@ -482,8 +565,10 @@ function doPost(e) {
       data = deleteTimeline(payload);
     } else if (action === 'deletePhoto') {
       data = deletePhoto(payload);
+    } else if (action === 'addFacility') {
+      data = addFacility(payload);
     } else {
-      data = { error: 'Unknown action. Use action=postTimeline, updateFacilityDetail, deleteTimeline or deletePhoto' };
+      data = { error: 'Unknown action. Use action=postTimeline, updateFacilityDetail, deleteTimeline, deletePhoto or addFacility' };
     }
 
     return jsonResponse(data);

@@ -1683,6 +1683,22 @@
   </div>
 </div>
 
+<!-- ===== NEW FACILITY SHEET ===== -->
+<div class="edit-sheet-overlay" id="add-facility-overlay" onclick="closeAddFacilitySheetIfBg(event)">
+  <div class="edit-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">🏢 新規施設を登録</div>
+      <button class="sheet-close" onclick="closeAddFacilitySheet()">✕</button>
+    </div>
+    <div class="sheet-body" id="add-facility-sheet-body">
+    </div>
+    <div class="sheet-footer">
+      <button class="btn-post" onclick="submitAddFacility()">登録する</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -24522,7 +24538,12 @@ function renderMemoFacilityList(keyword) {
     (norm === '' || normalizeJa(f.name).includes(norm) || normalizeJa(f.address).includes(norm))
   );
   if (hits.length === 0) {
-    dropdown.innerHTML = `<div style="padding:12px 14px;font-size:13px;color:var(--text-muted);">該当する施設がありません</div>`;
+    dropdown.innerHTML = `
+      <div style="padding:12px 14px;font-size:13px;color:var(--text-muted);">該当する施設がありません</div>
+      <div style="padding:0 14px 12px;">
+        <button type="button" onclick="openAddFacilitySheet(document.getElementById('memo-facility-search').value)" style="width:100%;padding:9px;background:var(--accent-pale);color:var(--accent);border:1.5px dashed var(--accent-light);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">🏢 新規施設として登録する</button>
+      </div>
+    `;
   } else {
     dropdown.innerHTML = hits.map(f => `
       <div onclick="selectMemoFacility('${f.id}')" style="
@@ -24923,6 +24944,227 @@ async function updateFacilityDetailOnGAS(f) {
     console.warn('GAS 施設情報の保存に失敗:', e);
     showToast('⚠️ 保存に失敗しました（通信環境をご確認ください）');
     return false;
+  }
+}
+
+// ============================
+//  ADD FACILITY (新規施設登録)
+// ============================
+
+// 住所から熊本市内の行政区（東西南北中央）を推測する。既存の絞り込みフィルタの
+// CITY_WARDS判定と同じ考え方。判定できない場合は空欄のままにし、フォームで手動選択できる。
+function guessNewFacWard() {
+  const addr = document.getElementById('newfac-address')?.value || '';
+  const m = addr.match(/熊本市(東|西|南|北|中央)区/);
+  if (m) {
+    const sel = document.getElementById('newfac-ward');
+    if (sel) sel.value = m[1];
+  }
+}
+
+function openAddFacilitySheet(prefillName) {
+  closeMemoSheet();
+
+  const careRows = Object.entries(CARE_LABELS).map(([key, label]) => {
+    const opts = careOptionsFor(key, '');
+    const optHtml = opts.map(o =>
+      `<option value="${escapeAttr(o.value)}" ${o.value === '' ? 'selected' : ''}>${o.label}</option>`
+    ).join('');
+    return `<div class="toggle-row">
+      <span class="toggle-label">${label}</span>
+      <select class="toggle-select" id="newfac-${key}">${optHtml}</select>
+    </div>`;
+  }).join('');
+
+  const vacancyLabels = { '':'未入力', 'available':'✅ 空きあり', 'soon':'⏳ 近日空き予定', 'full':'❌ 満床' };
+
+  document.getElementById('add-facility-sheet-body').innerHTML = `
+    <div class="field-label" style="margin-top:0;">施設名</div>
+    <input type="text" class="field-input" id="newfac-name" value="${escapeAttr(prefillName || '')}" placeholder="例：○○ホーム△△" style="width:100%;margin-top:4px;">
+
+    <div class="field-label">施設類型</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 0 10px;">
+      ${['介護付','住宅型','サ高住'].map(t => `
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;padding:5px 10px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);">
+          <input type="radio" name="newfac-type" value="${t}" style="display:none;" onchange="this.closest('div').querySelectorAll('label').forEach(l=>{const r=l.querySelector('input');l.style.border=r.checked?'1.5px solid var(--accent)':'1.5px solid var(--border)';l.style.background=r.checked?'var(--accent-pale)':'var(--surface)';l.style.fontWeight=r.checked?'700':'400';});">
+          ${t}
+        </label>
+      `).join('')}
+    </div>
+
+    <div class="field-label">住所</div>
+    <input type="text" class="field-input" id="newfac-address" placeholder="例：熊本市中央区○○1-2-3" style="width:100%;margin-top:4px;" oninput="guessNewFacWard()">
+
+    <div class="field-label">行政区（熊本市内の場合のみ）</div>
+    <select class="field-input" id="newfac-ward" style="width:100%;margin-top:4px;">
+      <option value="">―（対象外・不明）</option>
+      ${['東','西','南','北','中央'].map(w => `<option value="${w}">${w}区</option>`).join('')}
+    </select>
+
+    <div class="field-label">電話番号（任意）</div>
+    <input type="text" class="field-input" id="newfac-tel" placeholder="例：096-000-0000" style="width:100%;margin-top:4px;">
+
+    <div class="field-label" style="margin-top:14px;">空床状況</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 0 10px;">
+      ${['','available','soon','full'].map(v => {
+        const sel = v === '';
+        return `<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;padding:5px 10px;border-radius:20px;border:1.5px solid ${sel?'var(--accent)':'var(--border)'};background:${sel?'var(--accent-pale)':'var(--surface)'};font-weight:${sel?'700':'400'};">
+          <input type="radio" name="newfac-vacancy" value="${v}" ${sel?'checked':''} style="display:none;" onchange="document.getElementById('newfac-vacancy-hidden').value=this.value;this.closest('div').querySelectorAll('label').forEach(l=>{const r=l.querySelector('input');l.style.border=r.checked?'1.5px solid var(--accent)':'1.5px solid var(--border)';l.style.background=r.checked?'var(--accent-pale)':'var(--surface)';l.style.fontWeight=r.checked?'700':'400';});">
+          ${vacancyLabels[v]}
+        </label>`;
+      }).join('')}
+      <input type="hidden" id="newfac-vacancy-hidden" value="">
+    </div>
+    <div style="padding:0 0 10px;">
+      <div class="field-label" style="margin-top:0;">空床メモ（任意）</div>
+      <input type="text" class="field-input" id="newfac-vacancyNote" placeholder="例：○月頃に空き予定、○室空きあり" style="width:100%;margin-top:4px;">
+    </div>
+
+    <div class="field-label">費用情報</div>
+    <div style="padding:0 0 8px;">
+      <div class="field-label" style="margin-top:0;">入居時費用</div>
+      <input type="text" class="field-input" id="newfac-nyukyoFee" placeholder="例：20万円（敷金）" style="width:100%;margin-top:4px;">
+    </div>
+    <div class="cost-field-row">
+      <span class="cost-field-label">月額下限（円）</span>
+      <input type="number" class="cost-field-input" id="newfac-costMin" placeholder="例：100000">
+    </div>
+    <div class="cost-field-row">
+      <span class="cost-field-label">月額上限（円）</span>
+      <input type="number" class="cost-field-input" id="newfac-costMax" placeholder="例：180000">
+    </div>
+    <div style="padding:8px 0;border-bottom:1px solid var(--border);">
+      <div class="field-label" style="margin-top:0;">信頼性・特記事項</div>
+      <textarea class="field-input" id="newfac-costNote" placeholder="例：2026年6月 施設長様より電話確認" style="width:100%;margin-top:4px;min-height:38px;resize:none;overflow:hidden;" oninput="autoResizeTextarea(this)"></textarea>
+    </div>
+
+    <div class="field-label" style="margin-top:14px;">ケア体制・医療ケア</div>
+    ${careRows}
+    <div style="padding:8px 0 0;">
+      <div class="field-label" style="margin-top:0;">ケア体制「その他」の内容（任意）</div>
+      <textarea class="field-input" id="newfac-careOtherNote" placeholder="例：看取り：応相談。酸素：夜間のみ対応" style="width:100%;margin-top:4px;min-height:60px;"></textarea>
+    </div>
+    <div style="height:8px;"></div>
+  `;
+
+  document.getElementById('add-facility-overlay').classList.add('open');
+}
+
+function closeAddFacilitySheet() {
+  document.getElementById('add-facility-overlay').classList.remove('open');
+}
+function closeAddFacilitySheetIfBg(e) {
+  if (e.target === document.getElementById('add-facility-overlay')) closeAddFacilitySheet();
+}
+
+// 施設名の類似度・住所/電話番号の完全一致で、既存577施設との重複可能性をチェックする。
+// 誤検知を完全には防げないため、判定結果は警告として提示するのみで登録をブロックしない。
+function findSimilarFacilities(name, address, tel) {
+  const normName = normalizeJa(name);
+  const active = FACILITIES.filter(f => f.status !== 'closed');
+
+  const nameMatches = active.filter(f => {
+    const fn = normalizeJa(f.name);
+    if (!fn || !normName) return false;
+    if (fn === normName) return true;
+    return normName.length >= 3 && (fn.includes(normName) || normName.includes(fn));
+  });
+
+  const addrTelMatches = active.filter(f => {
+    const addrMatch = !!address && !!f.address && f.address.trim() === address.trim();
+    const telMatch = !!tel && !!f.tel && f.tel !== '-' && f.tel.trim() === tel.trim();
+    return addrMatch || telMatch;
+  });
+
+  const merged = [];
+  const seen = new Set();
+  [...nameMatches, ...addrTelMatches].forEach(f => {
+    if (!seen.has(f.id)) { seen.add(f.id); merged.push(f); }
+  });
+  return merged;
+}
+
+async function submitAddFacility() {
+  const name = (document.getElementById('newfac-name')?.value || '').trim();
+  const address = (document.getElementById('newfac-address')?.value || '').trim();
+  const tel = (document.getElementById('newfac-tel')?.value || '').trim();
+  const type = document.querySelector('input[name="newfac-type"]:checked')?.value || '';
+  const ward = document.getElementById('newfac-ward')?.value || '';
+
+  if (!currentUser) { showToast('ログインしてください'); return; }
+  if (!name) { showToast('施設名を入力してください'); return; }
+  if (!address) { showToast('住所を入力してください'); return; }
+  if (!type) { showToast('施設類型を選択してください'); return; }
+
+  const similar = findSimilarFacilities(name, address, tel);
+  if (similar.length > 0) {
+    const list = similar.slice(0, 10).map(f => `・${f.name}（${f.type}｜${f.address}）`).join('\n');
+    const more = similar.length > 10 ? `\n…他${similar.length - 10}件` : '';
+    const proceed = confirm(`似ている施設、または住所・電話番号が一致する施設が見つかりました。\n\n${list}${more}\n\n二重登録でなければ「OK」でそのまま新規登録できます。`);
+    if (!proceed) return;
+  }
+
+  // ケア体制は②シートの実際の列名で送る（CARE_LABELSは表示用の略称なので実列名に読み替える）
+  const care = {};
+  Object.keys(CARE_LABELS).forEach(key => {
+    const col = CARE_GAS_LABELS[key] || CARE_LABELS[key];
+    care[col] = document.getElementById('newfac-' + key)?.value || '';
+  });
+
+  const vacancyVal = document.getElementById('newfac-vacancy-hidden')?.value || '';
+  const minVal = document.getElementById('newfac-costMin')?.value;
+  const maxVal = document.getElementById('newfac-costMax')?.value;
+
+  const payload = {
+    name, address, tel, type, ward,
+    vacancy: VACANCY_TO_SHEET[vacancyVal] || '',
+    vacancyNote: document.getElementById('newfac-vacancyNote')?.value || '',
+    nyukyoFee: document.getElementById('newfac-nyukyoFee')?.value || '',
+    costMin: minVal ? parseInt(minVal) : '',
+    costMax: maxVal ? parseInt(maxVal) : '',
+    costNote: document.getElementById('newfac-costNote')?.value || '',
+    care,
+    careOtherNote: document.getElementById('newfac-careOtherNote')?.value || '',
+    registeredBy: currentUser || '',
+  };
+
+  const btn = document.querySelector('#add-facility-overlay .btn-post');
+  if (btn) { btn.disabled = true; btn.textContent = '登録中…'; }
+  const result = await addFacilityOnGAS(payload);
+  if (btn) { btn.disabled = false; btn.textContent = '登録する'; }
+
+  if (!result.success) {
+    showToast('⚠️ 登録に失敗しました：' + (result.error || '通信環境をご確認ください'));
+    return;
+  }
+
+  closeAddFacilitySheet();
+  showToast(`✅ ${name} を新規登録しました（${result.facilityId}）`);
+
+  await fetchFacilitiesFromGAS();
+  await fetchAllTimelinesFromGAS();
+  renderList();
+  if (currentView === 'map') updateMapMarkers();
+
+  // 元々「施設が見つからず新規登録した」流れなので、その施設宛の投稿フォームへ戻す
+  openMemoSheet(result.facilityId);
+}
+
+async function addFacilityOnGAS(payload) {
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'addFacility', ...payload }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data && data.error) return { success: false, error: data.error };
+    return { success: true, facilityId: data.facilityId };
+  } catch (e) {
+    console.warn('GAS 新規施設登録に失敗:', e);
+    return { success: false };
   }
 }
 
