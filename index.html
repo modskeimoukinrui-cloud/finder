@@ -1566,6 +1566,9 @@
       <button class="btn-filter-clear" onclick="clearFilters()">クリア</button>
       <button class="btn-filter-apply" onclick="applyFilters()">この条件で検索</button>
     </div>
+    <div style="text-align:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+      <button type="button" onclick="openAddFacilitySheet('')" style="background:none;border:none;color:var(--text-muted);font-size:12px;text-decoration:underline;cursor:pointer;font-family:'Noto Sans JP',sans-serif;padding:4px;">🏢 新規施設を登録</button>
+    </div>
   </div>
 
   <div class="list-screen" id="list-screen">
@@ -23960,7 +23963,12 @@ function renderList() {
   document.getElementById('result-count-num').textContent = filtered.length;
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">該当施設がありません</div><div class="empty-sub">条件を変更してお試しください</div></div>`;
+    // 検索語を入れて0件になった場合のみ、その語を引き継いで新規登録フォームを開けるようにする
+    // （絞り込みチップだけで0件になったケースでは登録導線を出さない）
+    const registerLink = rawKeyword
+      ? `<button type="button" onclick="openAddFacilitySheet('${escapeAttr(rawKeyword)}')" style="margin-top:14px;padding:9px 16px;background:var(--accent-pale);color:var(--accent);border:1.5px dashed var(--accent-light);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Noto Sans JP',sans-serif;">🏢 新規施設として登録する</button>`
+      : '';
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">該当施設がありません</div><div class="empty-sub">条件を変更してお試しください</div>${registerLink}</div>`;
     return;
   }
 
