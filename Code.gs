@@ -123,7 +123,11 @@ function squashKey(s) {
 
 // ②施設詳細・ケア体制 の1行を、アプリの「施設情報を更新」フォームの内容で更新する。
 // 施設固有IDで対象行を特定し、送られてきた項目だけを書き換える。
-function updateFacilityDetail(payload) {
+//
+// skipNotification: addFacility()が新規登録の一部としてこの関数を呼ぶときにtrueを渡す。
+// そうしないと「新規施設が登録されました」通知と「費用/ケア体制が更新されました」通知が
+// 二重に飛んでしまうため（新規登録時はaddFacility側の通知だけでよい）。
+function updateFacilityDetail(payload, skipNotification) {
   const facilityId = String(payload.facilityId || '').trim();
   if (!facilityId) throw new Error('facilityId が指定されていません');
 
@@ -169,6 +173,9 @@ function updateFacilityDetail(payload) {
 
   // --- 空床状況 ---
   // 空床状況が「変化したときだけ」空床確認日を今日（日本時間）で更新する
+  // vacancyBecameAvailable：通知用。「空床なし／未確認」→「空床あり」への変化のみを拾う
+  // （あり→なし、なし→なしのままは非該当）。
+  let vacancyBecameAvailable = false;
   if (payload.vacancy !== undefined) {
     const beforeVacancy = String(current[(findCol('空床状況') || 1) - 1] || '').trim();
     const afterVacancy = String(payload.vacancy || '').trim();
@@ -176,6 +183,7 @@ function updateFacilityDetail(payload) {
     if (afterVacancy && afterVacancy !== beforeVacancy) {
       put('空床確認日', todayInTokyo());
     }
+    vacancyBecameAvailable = (afterVacancy === '空きあり' && beforeVacancy !== '空きあり');
   }
   if (payload.vacancyNote !== undefined) put('空床メモ', payload.vacancyNote || '');
 
@@ -211,9 +219,25 @@ function updateFacilityDetail(payload) {
     if (payload.updatedBy) put('最終更新者', payload.updatedBy);
   }
 
+  if (!skipNotification) {
+    try {
+      const facilityName = current[(findCol('施設名（参照用）') || 1) - 1] || facilityId;
+      const msg = buildNotificationMessage('updateFacilityDetail', {
+        facilityName: facilityName,
+        vacancyBecameAvailable: vacancyBecameAvailable,
+        costChanged: costChanged,
+        careChanged: careChanged,
+      });
+      if (msg) sendLineWorksNotification(msg);
+    } catch (e) {
+      Logger.log('LINE Works通知でエラー（更新処理は継続します）: ' + e);
+    }
+  }
+
   return {
     success: true, facilityId: facilityId, row: rowNum,
-    costChanged: costChanged, careChanged: careChanged, updated: updated
+    costChanged: costChanged, careChanged: careChanged, updated: updated,
+    vacancyBecameAvailable: vacancyBecameAvailable
   };
 }
 
@@ -297,6 +321,77 @@ function savePhotosToDrive(facilityId, photosBase64Array) {
   return urls.join(',');
 }
 
+// ============================
+//  LINE Works 通知
+// ============================
+//
+// 現時点ではLINE Works側のBot作成・API利用が組織の承認待ち（申請中）のため、
+// sendLineWorksNotification()は実送信を行わないスタブになっている
+// （Logger.logで「送信予定の内容」を記録するのみ）。
+// メッセージの組み立て（buildNotificationMessage）と送信（sendLineWorksNotification）を
+// 分離しているのは、将来sendLineWorksNotification()の中身だけを差し替えれば
+// 実送信を有効化できるようにするため。
+
+// kind: 'postTimeline' | 'updateFacilityDetail' | 'addFacility'
+// 通知不要な場合（updateFacilityDetailで何も変化がなかった場合）はnullを返す。
+//
+// 文言のルール：変化した「大分類名」だけを伝え、個別の数値・具体的な変更内容は含めない。
+// 空床状況が「なし／未確認」→「あり」に変化した場合だけは特別扱いし、常に先頭の行に
+// 独立して置く（絵文字も🟢で他と分ける）。
+function buildNotificationMessage(kind, data) {
+  if (kind === 'postTimeline') {
+    return '📝 ' + (data.facilityName || '施設') + ' に新しい口コミが投稿されました（投稿者：' + (data.author || '不明') + '）';
+  }
+
+  if (kind === 'addFacility') {
+    // 二重登録警告を見た上での登録かどうかはCode.gs側では判別できない
+    // （フロント側でのみ確認ダイアログを出しているため）が、
+    // 依頼仕様上どちらの場合も同じ通知でよいので区別しない。
+    return '🏢 新規施設が登録されました：' + (data.facilityName || '施設') + '（登録者：' + (data.registeredBy || '不明') + '）';
+  }
+
+  if (kind === 'updateFacilityDetail') {
+    const lines = [];
+    if (data.vacancyBecameAvailable) {
+      lines.push('🟢 ' + (data.facilityName || '施設') + ' に空床があります');
+    }
+    const others = [];
+    if (data.costChanged) others.push('費用情報');
+    if (data.careChanged) others.push('ケア体制');
+    if (others.length > 0) {
+      if (data.vacancyBecameAvailable) {
+        // 空床発生の行が既に施設名を出しているので、こちらは付け足しの形にする
+        lines.push('🔄 ' + others.join('・') + 'も更新されました');
+      } else {
+        lines.push('🔄 ' + (data.facilityName || '施設') + '：' + others.join('・') + 'が更新されました');
+      }
+    }
+    if (lines.length === 0) return null;
+    return lines.join('\n');
+  }
+
+  return null;
+}
+
+// LINE Works Bot送信のスタブ。実際のHTTP送信は行わず、送信予定の内容をログに残すだけ。
+//
+// 【将来、送信を有効化する際の実装メモ】
+// - LINE Works APIはJWT認証（Service Account + Private Key）でアクセストークンを都度発行する方式
+// - アクセストークンはPropertiesServiceまたはCacheServiceで一定時間キャッシュし、
+//   毎回発行し直さない設計が望ましい（有効期限内は使い回す）
+// - 送信先は固定のChannel ID（チーム共通トークルーム）1つのみ
+// - 必要な認証情報（Client ID / Client Secret / Service Account / Private Key / Channel ID）は
+//   上司の承認後に発行される予定。発行され次第PropertiesServiceに設定し、
+//   このスタブ部分を「JWT組み立て→アクセストークン取得（キャッシュ確認込み）→
+//   Bot送信APIへUrlFetchApp.fetch()」の実装に置き換える
+//
+// 呼び出し側は必ずtry-catchで囲むこと（通知の失敗でメイン処理を失敗させないため）。
+function sendLineWorksNotification(message) {
+  Logger.log('=== LINE Works通知（スタブ：実際には送信していません） ===');
+  Logger.log(message);
+  Logger.log('=== ここまで ===');
+}
+
 function postTimeline(payload) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   const sheet = ss.getSheetByName(SHEET_NAMES.TIMELINE);
@@ -328,6 +423,17 @@ function postTimeline(payload) {
   ];
 
   sheet.appendRow(row);
+
+  try {
+    const msg = buildNotificationMessage('postTimeline', {
+      facilityName: payload.facilityName || '',
+      author: payload.author || '',
+    });
+    if (msg) sendLineWorksNotification(msg);
+  } catch (e) {
+    Logger.log('LINE Works通知でエラー（投稿処理は継続します）: ' + e);
+  }
+
   return { success: true, postId: postId, photoCount: photoUrls ? photoUrls.split(',').length : 0 };
 }
 
@@ -518,7 +624,14 @@ function addFacility(payload) {
   });
 
   const detailPayload = Object.assign({}, payload, { facilityId: facilityId, updatedBy: registeredBy });
-  updateFacilityDetail(detailPayload);
+  updateFacilityDetail(detailPayload, true); // 二重通知防止のためtrue（下でaddFacility専用の通知を送る）
+
+  try {
+    const msg = buildNotificationMessage('addFacility', { facilityName: name, registeredBy: registeredBy });
+    if (msg) sendLineWorksNotification(msg);
+  } catch (e) {
+    Logger.log('LINE Works通知でエラー（登録処理は継続します）: ' + e);
+  }
 
   return { success: true, facilityId: facilityId };
 }
