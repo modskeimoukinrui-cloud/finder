@@ -1556,7 +1556,7 @@
         <input type="number" class="cost-input" id="cost-max" placeholder="例：200000">
       </div>
     </div>
-    <div class="filter-section-title">患者宅からの距離（直線距離）</div>
+    <div class="filter-section-title">指定した場所からの距離（直線距離）</div>
     <div style="display:flex;gap:8px;align-items:stretch;">
       <input type="text" class="cost-input" id="origin-address" placeholder="例：熊本市中央区水前寺6丁目…" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();calcDistances();}">
       <button onclick="calcDistances()" style="flex-shrink:0;padding:7px 14px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-family:'Noto Sans JP',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;">📍 計算</button>
@@ -23820,13 +23820,13 @@ async function calcDistances() {
     Object.keys(distanceCache).forEach(k => delete distanceCache[k]);
     if (sortMode === 'distance') { sortMode = 'name'; sortDir = 1; syncSortTabs(); }
     renderList();
-    showToast('患者宅住所をクリアしました');
+    showToast('指定した場所の住所をクリアしました');
     return;
   }
 
   if (distanceCalcRunning) { showToast('計算中です…少々お待ちください'); return; }
   distanceCalcRunning = true;
-  showToast('📍 患者宅の位置を取得中…');
+  showToast('📍 指定した場所の位置を取得中…');
 
   // 患者宅住所をジオコーディング（国土地理院API）
   try {
@@ -23848,8 +23848,12 @@ async function calcDistances() {
   }
 
   // 距離順に切り替えて、まず一覧を再描画
+  // sortDirも明示的に昇順へ戻す（他タブを降順にした直後にここへ来た場合、
+  // 昇順にリセットしないと直前の降順設定が距離順に引き継がれ、計算直後から
+  // 遠い順で表示されてしまう＝「距離順がおかしい」ように見えるバグになるため）
   Object.keys(distanceCache).forEach(k => delete distanceCache[k]);
   sortMode = 'distance';
+  sortDir = 1;
   syncSortTabs();
   renderList();
   showToast('📍 各施設までの距離を計算中…');
