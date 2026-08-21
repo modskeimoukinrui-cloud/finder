@@ -325,12 +325,8 @@ function savePhotosToDrive(facilityId, photosBase64Array) {
 //  LINE Works 通知
 // ============================
 //
-// 現時点ではLINE Works側のBot作成・API利用が組織の承認待ち（申請中）のため、
-// sendLineWorksNotification()は実送信を行わないスタブになっている
-// （Logger.logで「送信予定の内容」を記録するのみ）。
-// メッセージの組み立て（buildNotificationMessage）と送信（sendLineWorksNotification）を
-// 分離しているのは、将来sendLineWorksNotification()の中身だけを差し替えれば
-// 実送信を有効化できるようにするため。
+// メッセージの組み立て（buildNotificationMessage）と送信（sendLineWorksNotification、
+// 実装は下記「LINE Works API 送信実装」セクション）を分離している。
 
 // kind: 'postTimeline' | 'updateFacilityDetail' | 'addFacility'
 // 通知不要な場合（updateFacilityDetailで何も変化がなかった場合）はnullを返す。
