@@ -1559,7 +1559,7 @@
     <div class="filter-section-title">指定した場所からの距離（直線距離）</div>
     <div style="display:flex;gap:8px;align-items:stretch;">
       <input type="text" class="cost-input" id="origin-address" placeholder="例：熊本市中央区水前寺6丁目…" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();calcDistances();}">
-      <button onclick="calcDistances()" style="flex-shrink:0;padding:7px 14px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-family:'Noto Sans JP',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;">📍 計算</button>
+      <button id="calc-distance-btn" onclick="calcDistances()" style="flex-shrink:0;min-width:148px;padding:7px 14px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-family:'Noto Sans JP',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;">📍 計算</button>
     </div>
     <div style="font-size:10px;color:var(--text-muted);margin-top:5px;line-height:1.6;">※ 住所を入力して「計算」を押すと、各施設までのおおよその直線距離を表示し、近い順に並べ替えます（空欄で計算すると解除）。</div>
     <div class="filter-actions">
@@ -23826,6 +23826,9 @@ async function calcDistances() {
 
   if (distanceCalcRunning) { showToast('計算中です…少々お待ちください'); return; }
   distanceCalcRunning = true;
+  const calcBtn = document.getElementById('calc-distance-btn');
+  const calcBtnDefaultText = calcBtn ? calcBtn.textContent : '';
+  if (calcBtn) { calcBtn.disabled = true; calcBtn.textContent = '計算中…'; }
   showToast('📍 指定した場所の位置を取得中…');
 
   // 患者宅住所をジオコーディング（国土地理院API）
@@ -23835,6 +23838,7 @@ async function calcDistances() {
     const data = await res.json();
     if (!data || !data[0] || !data[0].geometry) {
       distanceCalcRunning = false;
+      if (calcBtn) { calcBtn.disabled = false; calcBtn.textContent = calcBtnDefaultText; }
       showToast('住所が見つかりませんでした');
       return;
     }
@@ -23843,6 +23847,7 @@ async function calcDistances() {
     originAddress = addr;
   } catch (e) {
     distanceCalcRunning = false;
+    if (calcBtn) { calcBtn.disabled = false; calcBtn.textContent = calcBtnDefaultText; }
     showToast('距離計算に失敗しました（通信エラー）');
     return;
   }
@@ -23861,16 +23866,20 @@ async function calcDistances() {
   // 表示中の施設の座標を取得して直線距離を算出（API負荷軽減のためスロットリング）
   const targets = getMainFilteredList();
   try {
+    let done = 0;
     for (const f of targets) {
       let c = coordCache[f.id];
       if (!c) c = await fetchCoord(f.id, f.address);
       if (c) {
         distanceCache[f.id] = haversineKm(originCoord.lat, originCoord.lng, c.lat, c.lng);
       }
+      done++;
+      if (calcBtn) calcBtn.textContent = '計算中… ' + done + '/' + targets.length + '件';
       await new Promise(r => setTimeout(r, 80));
     }
   } finally {
     distanceCalcRunning = false;
+    if (calcBtn) { calcBtn.disabled = false; calcBtn.textContent = calcBtnDefaultText; }
   }
   renderList();
   showToast('✅ 直線距離の計算が完了しました');
