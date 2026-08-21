@@ -373,23 +373,170 @@ function buildNotificationMessage(kind, data) {
   return null;
 }
 
-// LINE Works Bot送信のスタブ。実際のHTTP送信は行わず、送信予定の内容をログに残すだけ。
+// ============================
+//  LINE Works API 送信実装
+// ============================
 //
-// 【将来、送信を有効化する際の実装メモ】
-// - LINE Works APIはJWT認証（Service Account + Private Key）でアクセストークンを都度発行する方式
-// - アクセストークンはPropertiesServiceまたはCacheServiceで一定時間キャッシュし、
-//   毎回発行し直さない設計が望ましい（有効期限内は使い回す）
-// - 送信先は固定のChannel ID（チーム共通トークルーム）1つのみ
-// - 必要な認証情報（Client ID / Client Secret / Service Account / Private Key / Channel ID）は
-//   上司の承認後に発行される予定。発行され次第PropertiesServiceに設定し、
-//   このスタブ部分を「JWT組み立て→アクセストークン取得（キャッシュ確認込み）→
-//   Bot送信APIへUrlFetchApp.fetch()」の実装に置き換える
-//
-// 呼び出し側は必ずtry-catchで囲むこと（通知の失敗でメイン処理を失敗させないため）。
+// 認証情報はすべてスクリプトプロパティ（PropertiesService.getScriptProperties()）から
+// 読み込む。コードには一切ハードコードしない。GASエディタの「プロジェクトの設定」→
+// 「スクリプト プロパティ」で以下のキー名で登録すること：
+//   LINEWORKS_CLIENT_ID       … Client ID
+//   LINEWORKS_CLIENT_SECRET   … Client Secret
+//   LINEWORKS_SERVICE_ACCOUNT … Service Account（JWTのsubに使う）
+//   LINEWORKS_PRIVATE_KEY     … Private Key（-----BEGIN PRIVATE KEY-----等を含む
+//                                PEM形式の全文。改行はそのまま貼り付けてよい）
+//   LINEWORKS_BOT_ID          … Bot ID（送信先エンドポイントの{botId}に使う）
+//   LINEWORKS_CHANNEL_ID      … Channel ID（送信先トークルーム）
+
+// スクリプトプロパティへのコピー時に改行が失われ、PEM形式のPrivate Keyが
+// 1行のベタ書きになってしまうことがある（Utilities.computeRsaSha256Signatureは
+// 改行の無いキー文字列だと「Invalid argument: key」で失敗する）ため、正しい
+// PEM形式に整形し直してから使う。
+//   1. リテラルな "\n"（バックスラッシュ+n）が含まれていれば実際の改行に変換する
+//   2. その結果、既にBEGIN/END行を含む複数行になっていればそのまま使う
+//      （＝もともと本物の改行が入っていた場合は実質何もしない）
+//   3. 保険：それでも1行のままの場合、BEGIN/END行の間の本体からすべての空白を
+//      取り除いたうえで、PEMの標準的な行長である64文字ごとに改行を入れ直す
+function normalizePrivateKey(raw) {
+  if (!raw) return raw;
+  let key = String(raw).trim();
+
+  if (key.indexOf('\\n') !== -1) {
+    key = key.split('\\n').join('\n');
+  }
+
+  const lines = key.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+  if (lines.length >= 3) {
+    return lines.join('\n') + '\n';
+  }
+
+  const m = key.match(/-----BEGIN ([A-Z ]+)-----\s*([\s\S]*?)\s*-----END \1-----/);
+  if (!m) {
+    // BEGIN/END行が見つからない＝想定外の形式。ここでは直せないのでそのまま返し、
+    // 呼び出し側のエラー（Invalid argument: key等）で気づけるようにする。
+    return key;
+  }
+  const label = m[1];
+  const body = m[2].replace(/\s+/g, '');
+  const wrapped = body.match(/.{1,64}/g) || [];
+  return '-----BEGIN ' + label + '-----\n' + wrapped.join('\n') + '\n-----END ' + label + '-----\n';
+}
+
+// 文字列またはバイト配列をJWT用のBase64URL（パディングなし、+ -→、/ _→）にエンコードする
+function base64UrlEncode(input) {
+  const base64 = (typeof input === 'string')
+    ? Utilities.base64Encode(input, Utilities.Charset.UTF_8)
+    : Utilities.base64Encode(input);
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+// LINE Works向けのJWT（RS256署名）を組み立てる
+function createLineWorksJwt(clientId, serviceAccount, privateKeyPem) {
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iss: clientId,
+    sub: serviceAccount,
+    iat: now,
+    exp: now + 3600, // 発行から最大60分
+  };
+  const unsigned = base64UrlEncode(JSON.stringify(header)) + '.' + base64UrlEncode(JSON.stringify(payload));
+  const signatureBytes = Utilities.computeRsaSha256Signature(unsigned, privateKeyPem);
+  return unsigned + '.' + base64UrlEncode(signatureBytes);
+}
+
+// アクセストークンを取得する。CacheServiceに残っていればそれを使い、
+// 毎回JWT生成〜トークン取得のAPI呼び出しをしないようにする。
+// 失敗時はエラーを投げる（呼び出し元でキャッチする方針）。
+function getLineWorksAccessToken() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('LINEWORKS_ACCESS_TOKEN');
+  if (cached) return cached;
+
+  const props = PropertiesService.getScriptProperties();
+  const clientId = props.getProperty('LINEWORKS_CLIENT_ID');
+  const clientSecret = props.getProperty('LINEWORKS_CLIENT_SECRET');
+  const serviceAccount = props.getProperty('LINEWORKS_SERVICE_ACCOUNT');
+  const privateKeyRaw = props.getProperty('LINEWORKS_PRIVATE_KEY');
+
+  if (!clientId || !clientSecret || !serviceAccount || !privateKeyRaw) {
+    throw new Error('LINE Works認証情報がスクリプトプロパティに未設定です（LINEWORKS_CLIENT_ID / LINEWORKS_CLIENT_SECRET / LINEWORKS_SERVICE_ACCOUNT / LINEWORKS_PRIVATE_KEY）');
+  }
+  const privateKey = normalizePrivateKey(privateKeyRaw);
+
+  const jwt = createLineWorksJwt(clientId, serviceAccount, privateKey);
+
+  const res = UrlFetchApp.fetch('https://auth.worksmobile.com/oauth2/v2.0/token', {
+    method: 'post',
+    contentType: 'application/x-www-form-urlencoded',
+    payload: {
+      assertion: jwt,
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      client_id: clientId,
+      client_secret: clientSecret,
+      scope: 'bot',
+    },
+    muteHttpExceptions: true,
+  });
+
+  const status = res.getResponseCode();
+  const body = res.getContentText();
+  if (status !== 200) {
+    throw new Error('LINE Worksアクセストークン取得に失敗しました（HTTP ' + status + '）: ' + body);
+  }
+
+  const json = JSON.parse(body);
+  if (!json.access_token) {
+    throw new Error('LINE Worksアクセストークン取得のレスポンスにaccess_tokenがありません: ' + body);
+  }
+
+  // 実際の有効期限（expires_in、通常3600秒）より短めの50分でキャッシュし、
+  // 期限ぎりぎりで失効したトークンを使ってしまわないようにする
+  cache.put('LINEWORKS_ACCESS_TOKEN', json.access_token, 50 * 60);
+  return json.access_token;
+}
+
+// LINE Works Bot送信の実装。呼び出し側は必ずtry-catchで囲むこと
+// （通知の失敗でfinder本体の書き込み処理を失敗させないため。既存の3アクションへの
+// フックは既にtry-catchで保護済みで、この関数はそこに例外を投げ返す設計のまま）。
+// リトライは行わない（1回送信し、失敗時はエラーを投げてログに残すのみ）。
 function sendLineWorksNotification(message) {
-  Logger.log('=== LINE Works通知（スタブ：実際には送信していません） ===');
-  Logger.log(message);
-  Logger.log('=== ここまで ===');
+  const props = PropertiesService.getScriptProperties();
+  const botId = props.getProperty('LINEWORKS_BOT_ID');
+  const channelId = props.getProperty('LINEWORKS_CHANNEL_ID');
+  if (!botId || !channelId) {
+    throw new Error('LINEWORKS_BOT_ID または LINEWORKS_CHANNEL_ID がスクリプトプロパティに未設定です');
+  }
+
+  const accessToken = getLineWorksAccessToken();
+
+  const url = 'https://www.worksapis.com/v1.0/bots/' + botId + '/channels/' + channelId + '/messages';
+  const res = UrlFetchApp.fetch(url, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { Authorization: 'Bearer ' + accessToken },
+    payload: JSON.stringify({ content: { type: 'text', text: message } }),
+    muteHttpExceptions: true,
+  });
+
+  const status = res.getResponseCode();
+  if (status < 200 || status >= 300) {
+    throw new Error('LINE Works通知の送信に失敗しました（HTTP ' + status + '）: ' + res.getContentText());
+  }
+
+  Logger.log('LINE Works通知を送信しました（HTTP ' + status + '）');
+}
+
+// GASエディタから直接実行して、実際に1通テスト送信するための手動実行用関数。
+// 本番の3アクション（postTimeline等）は経由せず、sendLineWorksNotification()を直接叩く。
+// 確認できたらこの関数はそのまま残してもよいし、不要なら削除して構わない。
+function testSendLineWorksNotification() {
+  try {
+    sendLineWorksNotification('【finder通知テスト】このメッセージはsendLineWorksNotification()の手動テスト送信です。');
+    Logger.log('テスト送信に成功しました');
+  } catch (e) {
+    Logger.log('テスト送信に失敗しました: ' + e);
+  }
 }
 
 function postTimeline(payload) {
