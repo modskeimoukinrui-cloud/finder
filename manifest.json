@@ -1,6 +1,6 @@
 {
-  "name": "finder（仮）- 介護施設情報共有",
-  "short_name": "finder",
+  "name": "Bridge・SW - 介護施設情報共有",
+  "short_name": "Bridge・SW",
   "description": "熊本県内の介護施設検索・情報共有アプリ",
   "start_url": "./index.html",
   "scope": "./",
