@@ -779,9 +779,27 @@ function addFacility(payload) {
   return { success: true, facilityId: facilityId };
 }
 
+// ============================
+//  簡易アクセス制御（共有トークン）
+// ============================
+// このWeb APIはURLを知っていれば誰でも呼べる（GAS Webアプリの制約上、
+// フロントが単純なfetch()で呼ぶ以上そもそもの認証基盤を設けていない）。
+// ここでのトークンチェックは「本気で狙う第三者」への対策ではなく、URLを
+// たまたま見つけたボット・クローラー・スキャナによる無差別アクセスの
+// 防止に目的を限定した簡易的な門扉。トークン自体はフロントのJSに書かれる
+// ため、view-source等で読もうとすれば誰でも見つけられる前提で運用する。
+function isAuthorized(token) {
+  const expected = PropertiesService.getScriptProperties().getProperty('SHARED_ACCESS_TOKEN');
+  return !!expected && token === expected;
+}
+
 function doGet(e) {
   const params = e.parameter || {};
   const action = params.action || '';
+
+  if (!isAuthorized(params.token)) {
+    return jsonResponse({ error: 'unauthorized' });
+  }
 
   try {
     let data;
@@ -810,6 +828,10 @@ function doPost(e) {
       try { payload = JSON.parse(e.postData.contents); } catch (_) {}
     }
     Object.assign(payload, params);
+
+    if (!isAuthorized(payload.token)) {
+      return jsonResponse({ error: 'unauthorized' });
+    }
 
     let data;
 

@@ -24208,6 +24208,7 @@ async function deleteTimelineOnGAS(postId, entry) {
     postId: postId,
     requestedBy: currentUser || '',
     asAdmin: isAdminSession === true,
+    token: SHARED_ACCESS_TOKEN,
   });
   try {
     const res = await fetch(GAS_URL, {
@@ -24335,6 +24336,7 @@ async function deletePhotoOnGAS(postId, url) {
     photoUrl: url,
     requestedBy: currentUser || '',
     asAdmin: isAdminSession === true,
+    token: SHARED_ACCESS_TOKEN,
   });
   try {
     const res = await fetch(GAS_URL, {
@@ -24955,6 +24957,7 @@ async function updateFacilityDetailOnGAS(f) {
         care,
         careOtherNote: f.careOtherNote || '',
         updatedBy: currentUser || '',
+        token: SHARED_ACCESS_TOKEN,
       }),
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -25177,7 +25180,7 @@ async function addFacilityOnGAS(payload) {
       method: 'POST',
       redirect: 'follow',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'addFacility', ...payload }),
+      body: JSON.stringify({ action: 'addFacility', ...payload, token: SHARED_ACCESS_TOKEN }),
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
@@ -25192,7 +25195,7 @@ async function addFacilityOnGAS(payload) {
 // 保存後にGASから該当施設を取り直して、画面の表示を実際の保存内容に合わせる
 async function refreshFacilityFromGAS(id) {
   try {
-    const res = await fetch(`${GAS_URL}?action=facilities`);
+    const res = await fetch(`${GAS_URL}?action=facilities&token=${encodeURIComponent(SHARED_ACCESS_TOKEN)}`);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (!Array.isArray(data)) return;
@@ -25243,6 +25246,10 @@ function showToast(msg) {
 //  GAS API 連携
 // ============================
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzxkREpXkOHGxnc7WyMfdf7cDDWcuPbyiIt4d0zBkOCw9JHFm-5Jq6aPS0ePJ5BHpa0/exec';
+// GAS側スクリプトプロパティのSHARED_ACCESS_TOKENと同じ値にすること。
+// URLを知っていれば誰でも叩けるWeb APIへの簡易的な門扉であり、本気で
+// 狙う第三者への防御ではない（フロントJSに書く以上、読もうとすれば見える）。
+const SHARED_ACCESS_TOKEN = 'MEIePWlHENIoH9RxnvPsiPfpHBRiMUGW';
 
 // ケア項目キー(内部) → 実際のGASシートの列見出し（改行含む）
 const CARE_GAS_LABELS = {
@@ -25363,7 +25370,7 @@ function applyFacilitiesFromApi(rawArray) {
 // 起動時：施設マスター＋詳細をGASから取得してFACILITIESを置き換える。失敗時は既存のFACILITIES（フォールバック）を使う。
 async function fetchFacilitiesFromGAS() {
   try {
-    const res = await fetch(`${GAS_URL}?action=facilities`);
+    const res = await fetch(`${GAS_URL}?action=facilities&token=${encodeURIComponent(SHARED_ACCESS_TOKEN)}`);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (data && data.error) throw new Error(data.error);
@@ -25380,7 +25387,7 @@ async function fetchFacilitiesFromGAS() {
 // 個別施設を開いた際のrefreshTimelineFromGAS()は、この上でさらに最新化するために引き続き動作する。
 async function fetchAllTimelinesFromGAS() {
   try {
-    const res = await fetch(`${GAS_URL}?action=timeline`);
+    const res = await fetch(`${GAS_URL}?action=timeline&token=${encodeURIComponent(SHARED_ACCESS_TOKEN)}`);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (data && data.error) throw new Error(data.error);
@@ -25429,7 +25436,7 @@ function normalizeTimelineEntryFromApi(row) {
 // 施設詳細を開いたときにタイムラインをGASから取得し、該当施設のtimelineを更新する
 async function fetchTimelineFromGAS(facilityId) {
   try {
-    const res = await fetch(`${GAS_URL}?action=timeline&id=${encodeURIComponent(facilityId)}`);
+    const res = await fetch(`${GAS_URL}?action=timeline&id=${encodeURIComponent(facilityId)}&token=${encodeURIComponent(SHARED_ACCESS_TOKEN)}`);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (data && data.error) throw new Error(data.error);
@@ -25453,7 +25460,7 @@ async function postTimelineToGAS(payload) {
       mode: 'no-cors',
       redirect: 'follow',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'postTimeline', ...payload }),
+      body: JSON.stringify({ action: 'postTimeline', ...payload, token: SHARED_ACCESS_TOKEN }),
     });
     return true;
   } catch (e) {
