@@ -925,6 +925,27 @@
   .cost-field-label { font-size: 13px; color: var(--text-primary); flex: 1; }
   .cost-field-input { width: 120px; padding: 6px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Noto Sans JP', sans-serif; background: var(--surface2); color: var(--text-primary); outline: none; }
 
+  /* ========== AI PHOTO ANALYSIS (edit sheet) ========== */
+  .ai-photo-btn {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    width: 100%; padding: 10px; margin: 4px 0 12px;
+    background: var(--accent-pale); color: var(--accent);
+    border: 1.5px dashed var(--accent-light); border-radius: 10px;
+    font-size: 13px; font-weight: 500; font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+  }
+  .ai-photo-btn:disabled { opacity: 0.6; cursor: default; }
+  .care-item { border-bottom: 1px solid var(--border); }
+  .care-item:last-child { border-bottom: none; }
+  .care-item .toggle-row { border-bottom: none; }
+  .ai-rationale {
+    display: none;
+    font-size: 11px; color: var(--text-muted); line-height: 1.5;
+    padding: 0 0 8px;
+  }
+  .ai-rationale.visible { display: block; }
+  .ai-preset { border-color: var(--accent) !important; background: var(--accent-pale) !important; }
+
   /* ========== TOAST ========== */
   .toast {
     position: fixed;
@@ -24804,14 +24825,19 @@ function openEditSheet(id) {
     const optHtml = opts.map(o =>
       `<option value="${escapeAttr(o.value)}" ${val === o.value ? 'selected' : ''}>${o.label}</option>`
     ).join('');
-    return `<div class="toggle-row">
-      <span class="toggle-label">${label}</span>
-      <select class="toggle-select" id="edit-${key}">${optHtml}</select>
+    return `<div class="care-item">
+      <div class="toggle-row">
+        <span class="toggle-label">${label}</span>
+        <select class="toggle-select" id="edit-${key}">${optHtml}</select>
+      </div>
+      <div class="ai-rationale" id="ai-rationale-${key}"></div>
     </div>`;
   }).join('');
 
   document.getElementById('edit-sheet-body').innerHTML = `
     <div class="sheet-facility-name">✏️ ${f.name}</div>
+    <button type="button" class="ai-photo-btn" id="ai-photo-btn" onclick="triggerAiPhotoAnalysis()">📷 チラシから自動入力</button>
+    <input type="file" id="ai-photo-input" accept="image/*" style="display:none;" onchange="onAiPhotoFileSelected(this)">
     <div class="field-label">空床状況</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 0 10px;">
       ${['','available','soon','full'].map(v => {
@@ -24866,6 +24892,130 @@ function closeEditSheet() {
 }
 function closeEditSheetIfBg(e) {
   if (e.target === document.getElementById('edit-overlay')) closeEditSheet();
+}
+
+// ============================
+//  AI PHOTO ANALYSIS（チラシ写真からの下書き自動入力）
+// ============================
+// CARE_LABELS（表示ラベル）の逆引き：Geminiの解析結果は表示ラベル（"24h看護師"等）を
+// キーに返ってくるため、フォームのid（edit-${内部キー}）に戻すために使う。
+const CARE_LABEL_TO_KEY = Object.fromEntries(Object.entries(CARE_LABELS).map(([key, label]) => [label, key]));
+
+function triggerAiPhotoAnalysis() {
+  document.getElementById('ai-photo-input')?.click();
+}
+
+async function onAiPhotoFileSelected(input) {
+  const file = input.files && input.files[0];
+  input.value = ''; // 同じファイルを続けて選び直せるようにする
+  if (!file) return;
+
+  const f = FACILITIES.find(x => x.id === memoTargetId);
+  if (!f) return;
+
+  const btn = document.getElementById('ai-photo-btn');
+  const defaultText = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '解析中…'; }
+
+  try {
+    const photoBase64 = await resizeAndCompressImage(file);
+    const result = await analyzeFacilityPhotoOnGAS(f.id, photoBase64);
+    if (!result) {
+      showToast('⚠️ 解析に失敗しました。手動で入力してください');
+      return;
+    }
+    applyAiAnalysisToEditForm(result, f);
+    showToast('✅ チラシの解析結果を下書きに反映しました。内容を確認してください');
+  } catch (e) {
+    console.warn('AI写真解析に失敗:', e);
+    showToast('⚠️ 解析に失敗しました。手動で入力してください');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = defaultText; }
+  }
+}
+
+// GASのanalyzeFacilityPhotoアクションへ画像を送り、解析結果を受け取る。
+// 失敗時はnullを返す（呼び出し元でトースト表示・手動入力へのフォールバックを行う）。
+async function analyzeFacilityPhotoOnGAS(facilityId, photoBase64) {
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'analyzeFacilityPhoto',
+        facilityId,
+        photoBase64,
+        token: SHARED_ACCESS_TOKEN,
+      }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data && data.error) { console.warn('AI写真解析エラー:', data.error); return null; }
+    return data;
+  } catch (e) {
+    console.warn('AI写真解析リクエストに失敗:', e);
+    return null;
+  }
+}
+
+// 解析結果（下書き）を「施設情報を更新」フォームへプリセットする。
+// 既存のsaveEdit()フローに乗せるだけで、ここではシートへの保存は一切行わない。
+// 既存メモを消さないよう、費用・その他メモは上書きせず末尾に追記する。
+function applyAiAnalysisToEditForm(result, f) {
+  // 施設名の誤認識チェック（違う施設のチラシを間違って読み込んでいないかの簡易セーフティ）
+  const aiName = (result.施設名 || '').trim();
+  if (aiName && f.name && !f.name.includes(aiName) && !aiName.includes(f.name)) {
+    showToast('⚠️ AIが読み取った施設名（' + aiName + '）が選択中の施設と異なるようです。写真をご確認ください');
+  }
+
+  const appendNote = (el, addition) => {
+    if (!el || !addition) return;
+    const before = el.value.trim();
+    el.value = before ? before + '\n' + addition : addition;
+    el.classList.add('ai-preset');
+  };
+
+  // 費用
+  if (result.入居時費用) {
+    const el = document.getElementById('edit-nyukyoFee');
+    if (el) { el.value = result.入居時費用; el.classList.add('ai-preset'); }
+  }
+  if (result.月額下限 !== null && result.月額下限 !== undefined) {
+    const el = document.getElementById('edit-costMin');
+    if (el) { el.value = result.月額下限; el.classList.add('ai-preset'); }
+  }
+  if (result.月額上限 !== null && result.月額上限 !== undefined) {
+    const el = document.getElementById('edit-costMax');
+    if (el) { el.value = result.月額上限; el.classList.add('ai-preset'); }
+  }
+  if (result.費用の根拠) {
+    appendNote(document.getElementById('edit-costNote'), '[AI解析] ' + result.費用の根拠);
+    autoResizeTextarea(document.getElementById('edit-costNote'));
+  }
+
+  // ケア体制14項目
+  const care = result.ケア体制 || {};
+  const evidence = result['各ケア項目の根拠'] || {};
+  Object.entries(care).forEach(([label, value]) => {
+    const key = CARE_LABEL_TO_KEY[label];
+    if (!key) return; // 想定外のラベルは無視（GAS側で14項目に正規化済みのはず）
+    const sel = document.getElementById('edit-' + key);
+    if (sel && value) {
+      sel.value = value;
+      sel.classList.add('ai-preset');
+    }
+    const rationaleEl = document.getElementById('ai-rationale-' + key);
+    if (rationaleEl && evidence[label]) {
+      rationaleEl.textContent = '🤖 ' + evidence[label];
+      rationaleEl.classList.add('visible');
+    }
+  });
+
+  // ケア体制その他メモ
+  if (result.ケア体制その他メモ) {
+    appendNote(document.getElementById('edit-careOtherNote'), result.ケア体制その他メモ);
+  }
 }
 
 async function saveEdit() {

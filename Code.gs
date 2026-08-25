@@ -780,6 +780,145 @@ function addFacility(payload) {
 }
 
 // ============================
+//  写真からのケア体制・費用AI解析（Gemini API）
+// ============================
+// SWがチラシ等の写真をアップロードすると、Geminiが内容を解析して
+// 「施設情報を更新」フォームへの下書き値を返す。解析結果はあくまで下書きで、
+// SWが確認・修正してから既存のupdateFacilityDetailで保存する（ここでは
+// シートへの書き込みは一切行わない）。
+
+// ケア体制14項目の表示ラベル一覧（index.htmlのCARE_LABELSの値と一致させること）
+const CARE_LABEL_LIST = ['生活保護', '24h看護師', '看取り', 'インスリン', '褥瘡', 'バルーン', '胃瘻', '点滴', 'IVH', '吸引', '酸素', '気管切開', '人工呼吸器', '透析'];
+
+// Google AI Studio Playgroundで4枚のサンプルチラシに対し実用精度を確認済みのプロンプト。
+// プロンプトエンジニアリング済みのため文言を変更しないこと。
+const GEMINI_FACILITY_PHOTO_PROMPT = `あなたは介護施設の空床・料金・ケア体制情報を抽出するアシスタントです。 添付された介護施設のチラシ画像を読み取り、以下のJSON形式で出力してください。
+出力形式: { "施設名": "文字列", "入居時費用": "文字列（記載がなければnull）", "月額下限": 数値（円、記載がなければnull）, "月額上限": 数値（円、記載がなければnull）, "費用の根拠": "月額の内訳や算出根拠を1文で", "ケア体制": { "生活保護": "ー|〇|要相談|×|その他", "24h看護師": "ー|〇|要相談|×|24H常駐|日中常駐|その他", "看取り": "ー|〇|要相談|×|その他", "インスリン": "ー|〇|要相談|×|その他", "褥瘡": "ー|〇|要相談|×|その他", "バルーン": "ー|〇|要相談|×|その他", "胃瘻": "ー|〇|要相談|×|その他", "点滴": "ー|〇|要相談|×|その他", "IVH": "ー|〇|要相談|×|その他", "吸引": "ー|〇|要相談|×|その他", "酸素": "ー|〇|要相談|×|その他", "気管切開": "ー|〇|要相談|×|その他", "人工呼吸器": "ー|〇|要相談|×|その他", "透析": "ー|〇|要相談|×|その他" }, "各ケア項目の根拠": { "項目名": "チラシ内の該当箇所の引用（記載があった項目、および「その他」と判定した項目は必ず記載すること）" }, "ケア体制その他メモ": "14項目に当てはまらないが重要な情報（例：身寄りのない方相談可、等）" }
+重要なルール:
+
+* チラシに明記されていない項目は必ず「ー」とすること。推測で〇や×を付けないこと。
+* 「相談可」「要相談」の表現がある場合は「要相談」を選ぶこと。
+* 「入居時の要件」「対応可能な医療ケア」等の欄に病名・処置名（インスリン、バルーン等）が列挙されている場合、それは「その処置が必要な方でも受け入れ可能」という意味なので、該当項目を「〇」としてよい。
+* 「各ケア項目の根拠」には、判定が「ー」以外になったすべての項目について、チラシ内の該当箇所を必ず原文のまま引用すること。「その他」と判定した項目も例外ではなく、判断の元になった原文を必ず引用し、その上でなぜ〇や24H常駐等ではなく「その他」に留めたかを一言添えること。
+
+「24h看護師」項目の判定は特に慎重に行うこと:
+
+* 「24時間体制でスタッフが常駐」「スタッフが24時間常駐」「24時間365日介護スタッフ常駐」等の記載は、介護スタッフの常駐を意味するのであって、看護師の常駐を意味しない。これだけを根拠に〇や24H常駐としてはならない。
+* 「訪問看護ステーション併設」「訪問看護ステーション●●」「訪問介護事業所併設」等の記載は、外部の訪問看護・訪問介護サービスと連携しているという意味であり、施設内に看護師が常駐しているという意味ではない。これだけを根拠に〇としてはならない。
+* 「看護師」という言葉が明記され、かつ常駐・日中のみ等の勤務体制が具体的に読み取れる場合のみ、24H常駐／日中常駐／〇のいずれかを選ぶこと。
+* 看護師の常駐に関する記載が曖昧、または「スタッフ常駐」「訪問看護／訪問介護併設」としか書かれていない場合は、「その他」を選び、根拠欄にチラシの該当原文を引用したうえで「施設内看護師の常駐体制は記載から確認できず、スタッフ常駐または訪問看護連携の記載のみ」と明記すること。
+
+JSON以外の文章は出力しないこと。`;
+
+// ケア体制1項目分の値を、フォームの実際の選択肢（''/〇/要相談/×/その他、24h看護師のみ+24H常駐/日中常駐）
+// に照らして検証する。Geminiの「ー」（未記載）はフォーム上の空値（''）に対応する。
+// 想定外の値が返ってきた場合は安全側に倒して空値にフォールバックし、ログに残す。
+function sanitizeGeminiCareValue(label, rawValue) {
+  const val = String(rawValue === null || rawValue === undefined ? '' : rawValue).trim();
+  const base = ['ー', '〇', '要相談', '×', 'その他'];
+  const allowed = label === '24h看護師' ? base.concat(['24H常駐', '日中常駐']) : base;
+  if (!allowed.includes(val)) {
+    Logger.log('analyzeFacilityPhoto: 想定外のケア体制値のため空値にフォールバックしました: ' + label + '=' + JSON.stringify(rawValue));
+    return '';
+  }
+  return val === 'ー' ? '' : val;
+}
+
+// Geminiのレスポンス（パース済みJSON）を、フロントで安全に使える形に検証・整形する。
+function sanitizeGeminiResult(parsed) {
+  const rawCare = (parsed && parsed['ケア体制']) || {};
+  const care = {};
+  CARE_LABEL_LIST.forEach(function (label) {
+    care[label] = sanitizeGeminiCareValue(label, rawCare[label]);
+  });
+
+  const rawEvidence = (parsed && parsed['各ケア項目の根拠']) || {};
+  const evidence = {};
+  CARE_LABEL_LIST.forEach(function (label) {
+    if (rawEvidence[label]) evidence[label] = String(rawEvidence[label]);
+  });
+
+  const costMinRaw = parsed && parsed['月額下限'];
+  const costMaxRaw = parsed && parsed['月額上限'];
+
+  return {
+    施設名: parsed && parsed['施設名'] ? String(parsed['施設名']) : '',
+    入居時費用: parsed && parsed['入居時費用'] ? String(parsed['入居時費用']) : '',
+    月額下限: typeof costMinRaw === 'number' ? costMinRaw : null,
+    月額上限: typeof costMaxRaw === 'number' ? costMaxRaw : null,
+    費用の根拠: parsed && parsed['費用の根拠'] ? String(parsed['費用の根拠']) : '',
+    ケア体制: care,
+    各ケア項目の根拠: evidence,
+    ケア体制その他メモ: parsed && parsed['ケア体制その他メモ'] ? String(parsed['ケア体制その他メモ']) : '',
+  };
+}
+
+// Gemini APIへ画像を送って解析させる。認証情報（GEMINI_API_KEY / GEMINI_MODEL）は
+// sendLineWorksNotification等と同じ方針でスクリプトプロパティから読み込み、
+// 未設定時は明示的にエラーを投げる。失敗時は呼び出し元（doPost）のtry-catchで
+// {error: ...}として返る。
+function analyzeFacilityPhotoWithGemini(photoBase64) {
+  const props = PropertiesService.getScriptProperties();
+  const apiKey = props.getProperty('GEMINI_API_KEY');
+  const model = props.getProperty('GEMINI_MODEL');
+  if (!apiKey || !model) {
+    throw new Error('Gemini API設定がスクリプトプロパティに未設定です（GEMINI_API_KEY / GEMINI_MODEL）');
+  }
+
+  const base64 = String(photoBase64 || '').replace(/^data:image\/\w+;base64,/, '');
+  if (!base64) throw new Error('photoBase64が指定されていません');
+
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent';
+  const res = UrlFetchApp.fetch(url, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { 'x-goog-api-key': apiKey },
+    payload: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: GEMINI_FACILITY_PHOTO_PROMPT },
+          { inlineData: { mimeType: 'image/jpeg', data: base64 } },
+        ],
+      }],
+      generationConfig: { responseMimeType: 'application/json' },
+    }),
+    muteHttpExceptions: true,
+  });
+
+  const status = res.getResponseCode();
+  const body = res.getContentText();
+  if (status !== 200) {
+    throw new Error('Gemini APIの呼び出しに失敗しました（HTTP ' + status + '）: ' + body);
+  }
+
+  const json = JSON.parse(body);
+  const text = json && json.candidates && json.candidates[0] && json.candidates[0].content
+    && json.candidates[0].content.parts && json.candidates[0].content.parts[0]
+    && json.candidates[0].content.parts[0].text;
+  if (!text) {
+    throw new Error('Gemini APIのレスポンスに解析結果が含まれていません: ' + body);
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (e) {
+    throw new Error('Gemini APIの応答をJSONとして解析できませんでした: ' + text);
+  }
+
+  return sanitizeGeminiResult(parsed);
+}
+
+// doPostのanalyzeFacilityPhotoアクションの本体。シートへの書き込みは行わない
+// （解析結果を返すのみ。保存は既存のupdateFacilityDetailに委譲）。
+function analyzeFacilityPhoto(payload) {
+  const facilityId = String(payload.facilityId || '').trim();
+  const result = analyzeFacilityPhotoWithGemini(payload.photoBase64);
+  Logger.log('analyzeFacilityPhoto: facilityId=' + facilityId + ' の解析が完了しました');
+  return result;
+}
+
+// ============================
 //  簡易アクセス制御（共有トークン）
 // ============================
 // このWeb APIはURLを知っていれば誰でも呼べる（GAS Webアプリの制約上、
@@ -845,8 +984,10 @@ function doPost(e) {
       data = deletePhoto(payload);
     } else if (action === 'addFacility') {
       data = addFacility(payload);
+    } else if (action === 'analyzeFacilityPhoto') {
+      data = analyzeFacilityPhoto(payload);
     } else {
-      data = { error: 'Unknown action. Use action=postTimeline, updateFacilityDetail, deleteTimeline, deletePhoto or addFacility' };
+      data = { error: 'Unknown action. Use action=postTimeline, updateFacilityDetail, deleteTimeline, deletePhoto, addFacility or analyzeFacilityPhoto' };
     }
 
     return jsonResponse(data);
