@@ -928,13 +928,18 @@
   /* ========== AI PHOTO ANALYSIS (edit sheet) ========== */
   .ai-photo-btn {
     display: flex; align-items: center; justify-content: center; gap: 6px;
-    width: 100%; padding: 10px; margin: 4px 0 12px;
+    width: 100%; padding: 10px; margin: 4px 0 6px;
     background: var(--accent-pale); color: var(--accent);
     border: 1.5px dashed var(--accent-light); border-radius: 10px;
     font-size: 13px; font-weight: 500; font-family: 'Noto Sans JP', sans-serif;
     cursor: pointer;
   }
   .ai-photo-btn:disabled { opacity: 0.6; cursor: default; }
+  .ai-photo-warning {
+    font-size: 11px; line-height: 1.5; color: var(--warn);
+    background: var(--warn-pale); border-radius: 8px;
+    padding: 6px 10px; margin: 0 0 12px;
+  }
   .care-item { border-bottom: 1px solid var(--border); }
   .care-item:last-child { border-bottom: none; }
   .care-item .toggle-row { border-bottom: none; }
@@ -24838,6 +24843,7 @@ function openEditSheet(id) {
     <div class="sheet-facility-name">✏️ ${f.name}</div>
     <button type="button" class="ai-photo-btn" id="ai-photo-btn" onclick="triggerAiPhotoAnalysis()">📷 チラシから自動入力</button>
     <input type="file" id="ai-photo-input" accept="image/*" style="display:none;" onchange="onAiPhotoFileSelected(this)">
+    <div class="ai-photo-warning">⚠️ この写真はAIが解析します。個人情報・機密情報が写り込んだ画像はアップロードしないでください。</div>
     <div class="field-label">空床状況</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 0 10px;">
       ${['','available','soon','full'].map(v => {
