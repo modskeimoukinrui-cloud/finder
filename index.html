@@ -24911,6 +24911,33 @@ function triggerAiPhotoAnalysis() {
   document.getElementById('ai-photo-input')?.click();
 }
 
+// resizeAndCompressImage()（口コミ投稿の写真添付とも共用）がreject時に投げる
+// メッセージ一覧。ここでの原因判定用にのみ使う（同関数自体は変更しない）。
+const IMAGE_LOAD_ERROR_MESSAGES = ['ファイルの読み込みに失敗しました', '画像の読み込みに失敗しました'];
+
+// AI写真解析の失敗を、原因種別ごとのユーザー向け文言に変換する。
+// 技術的な詳細（HTTPステータスやAPIのエラー文字列）はここでは出さず、
+// SWが読んで意味の分かる言葉に留める。
+function aiPhotoErrorMessage(kind) {
+  const messages = {
+    image: '⚠️ 写真の読み込みに失敗しました。別の写真で試すか、時間をおいて再度お試しください',
+    network: '⚠️ 通信に失敗しました。電波の良い場所で再度お試しください',
+    'server-busy': '⚠️ 現在AIが混み合っています。時間をおいて再度お試しください',
+    http: '⚠️ 解析に失敗しました。しばらくしてから再度お試しいただくか、手動で入力してください',
+    server: '⚠️ 解析に失敗しました。しばらくしてから再度お試しいただくか、手動で入力してください',
+    parse: '⚠️ 解析に失敗しました。しばらくしてから再度お試しいただくか、手動で入力してください',
+  };
+  return messages[kind] || '⚠️ 解析に失敗しました。手動で入力してください';
+}
+
+// 原因種別(kind)と元のエラー内容(detail)を1行にまとめてコンソールへ残し、
+// 対応するユーザー向けメッセージをトーストで表示する。
+// 通常のトーストより長い文章になるため、読み切れるよう表示時間を延ばす。
+function reportAiPhotoError(kind, detail) {
+  console.warn('[AI写真解析エラー] kind=' + kind + ' detail=' + detail);
+  showToast(aiPhotoErrorMessage(kind), 4000);
+}
+
 async function onAiPhotoFileSelected(input) {
   const file = input.files && input.files[0];
   input.value = ''; // 同じファイルを続けて選び直せるようにする
@@ -24924,27 +24951,41 @@ async function onAiPhotoFileSelected(input) {
   if (btn) { btn.disabled = true; btn.textContent = '解析中…'; }
 
   try {
-    const photoBase64 = await resizeAndCompressImage(file);
-    const result = await analyzeFacilityPhotoOnGAS(f.id, photoBase64);
-    if (!result) {
-      showToast('⚠️ 解析に失敗しました。手動で入力してください');
+    let photoBase64;
+    try {
+      photoBase64 = await resizeAndCompressImage(file);
+    } catch (e) {
+      const isImageError = e instanceof Error && IMAGE_LOAD_ERROR_MESSAGES.includes(e.message);
+      reportAiPhotoError(isImageError ? 'image' : 'unknown', e && e.message);
       return;
     }
-    applyAiAnalysisToEditForm(result, f);
+
+    const result = await analyzeFacilityPhotoOnGAS(f.id, photoBase64);
+    if (!result.ok) {
+      reportAiPhotoError(result.kind, result.detail);
+      return;
+    }
+    applyAiAnalysisToEditForm(result.data, f);
     showToast('✅ チラシの解析結果を下書きに反映しました。内容を確認してください');
   } catch (e) {
-    console.warn('AI写真解析に失敗:', e);
-    showToast('⚠️ 解析に失敗しました。手動で入力してください');
+    reportAiPhotoError('unknown', e && e.message);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = defaultText; }
   }
 }
 
 // GASのanalyzeFacilityPhotoアクションへ画像を送り、解析結果を受け取る。
-// 失敗時はnullを返す（呼び出し元でトースト表示・手動入力へのフォールバックを行う）。
+// 成功時は{ ok: true, data }、失敗時は{ ok: false, kind, detail }を返す。
+// kindの種類：
+//   network … fetch自体が失敗（オフライン等）
+//   http    … HTTPステータスが異常（GAS側の予期しないエラー等）
+//   parse   … レスポンスがJSONとして解析できない
+//   server  … GASが明示的に返したエラー（doPostの{error: err.message}）
+//   server-busy … 上記のうち、Gemini無料枠の混雑（HTTP 503/UNAVAILABLE）と判定できたもの
 async function analyzeFacilityPhotoOnGAS(facilityId, photoBase64) {
+  let res;
   try {
-    const res = await fetch(GAS_URL, {
+    res = await fetch(GAS_URL, {
       method: 'POST',
       redirect: 'follow',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -24955,14 +24996,28 @@ async function analyzeFacilityPhotoOnGAS(facilityId, photoBase64) {
         token: SHARED_ACCESS_TOKEN,
       }),
     });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    if (data && data.error) { console.warn('AI写真解析エラー:', data.error); return null; }
-    return data;
   } catch (e) {
-    console.warn('AI写真解析リクエストに失敗:', e);
-    return null;
+    return { ok: false, kind: 'network', detail: String((e && e.message) || e) };
   }
+
+  if (!res.ok) {
+    return { ok: false, kind: 'http', detail: 'HTTP ' + res.status };
+  }
+
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    return { ok: false, kind: 'parse', detail: String((e && e.message) || e) };
+  }
+
+  if (data && data.error) {
+    const errStr = String(data.error);
+    const busy = /503|UNAVAILABLE/i.test(errStr);
+    return { ok: false, kind: busy ? 'server-busy' : 'server', detail: errStr };
+  }
+
+  return { ok: true, data };
 }
 
 // 解析結果（下書き）を「施設情報を更新」フォームへプリセットする。
@@ -25390,11 +25445,15 @@ function showScreen(name) {
 // ============================
 //  TOAST
 // ============================
-function showToast(msg) {
+let toastHideTimer = null;
+function showToast(msg, duration = 2500) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  // 直前のトーストの非表示タイマーが残っていると、今回のdurationより先に
+  // 消されてしまうことがあるためクリアしてから積み直す
+  if (toastHideTimer) clearTimeout(toastHideTimer);
+  toastHideTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
 
