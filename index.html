@@ -24965,8 +24965,12 @@ async function onAiPhotoFileSelected(input) {
       reportAiPhotoError(result.kind, result.detail);
       return;
     }
-    applyAiAnalysisToEditForm(result.data, f);
-    showToast('✅ チラシの解析結果を下書きに反映しました。内容を確認してください');
+    const nameMismatch = applyAiAnalysisToEditForm(result.data, f);
+    // 施設名ミスマッチ警告（4000ms表示）と続けて表示すると、1つしかない
+    // トースト要素のテキストが即座に上書きされて警告が読めなくなるため、
+    // 警告が出た場合は表示し終わるのを待ってから解析完了メッセージを出す。
+    if (nameMismatch) await new Promise(r => setTimeout(r, 4000));
+    showToast('✅ チラシの解析結果を下書きに反映しました。内容を確認してください', 4000);
   } catch (e) {
     reportAiPhotoError('unknown', e && e.message);
   } finally {
@@ -25023,11 +25027,15 @@ async function analyzeFacilityPhotoOnGAS(facilityId, photoBase64) {
 // 解析結果（下書き）を「施設情報を更新」フォームへプリセットする。
 // 既存のsaveEdit()フローに乗せるだけで、ここではシートへの保存は一切行わない。
 // 既存メモを消さないよう、費用・その他メモは上書きせず末尾に追記する。
+// 戻り値：施設名ミスマッチ警告を表示したかどうか（呼び出し元が、直後に続く
+// 解析完了メッセージの表示タイミングをずらして両方読み切れるようにするため）。
 function applyAiAnalysisToEditForm(result, f) {
+  let nameMismatch = false;
   // 施設名の誤認識チェック（違う施設のチラシを間違って読み込んでいないかの簡易セーフティ）
   const aiName = (result.施設名 || '').trim();
   if (aiName && f.name && !f.name.includes(aiName) && !aiName.includes(f.name)) {
-    showToast('⚠️ AIが読み取った施設名（' + aiName + '）が選択中の施設と異なるようです。写真をご確認ください');
+    nameMismatch = true;
+    showToast('⚠️ AIが読み取った施設名（' + aiName + '）が選択中の施設と異なるようです。写真をご確認ください', 4000);
   }
 
   const appendNote = (el, addition) => {
@@ -25077,6 +25085,8 @@ function applyAiAnalysisToEditForm(result, f) {
   if (result.ケア体制その他メモ) {
     appendNote(document.getElementById('edit-careOtherNote'), result.ケア体制その他メモ);
   }
+
+  return nameMismatch;
 }
 
 async function saveEdit() {
