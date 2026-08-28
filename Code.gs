@@ -227,6 +227,7 @@ function updateFacilityDetail(payload, skipNotification) {
         vacancyBecameAvailable: vacancyBecameAvailable,
         costChanged: costChanged,
         careChanged: careChanged,
+        updatedBy: payload.updatedBy,
       });
       if (msg) sendLineWorksNotification(msg);
     } catch (e) {
@@ -363,7 +364,7 @@ function buildNotificationMessage(kind, data) {
       }
     }
     if (lines.length === 0) return null;
-    return lines.join('\n');
+    return lines.join('\n') + '（更新者：' + (data.updatedBy || '不明') + '）';
   }
 
   return null;
