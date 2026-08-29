@@ -963,10 +963,12 @@
     border-radius: 24px;
     font-size: 13px;
     font-family: 'Noto Sans JP', sans-serif;
+    text-align: center;
     opacity: 0;
     transition: all 0.25s;
     z-index: 500;
-    white-space: nowrap;
+    white-space: pre-wrap;
+    max-width: calc(100vw - 40px);
     pointer-events: none;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
