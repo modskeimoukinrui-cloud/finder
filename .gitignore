@@ -1,1 +1,6 @@
 secrets/
+*.xlsx
+*.xlsm
+*.csv
+*.docx
+claude_code_prompt_*.md
