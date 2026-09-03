@@ -25205,6 +25205,14 @@ async function updateFacilityDetailOnGAS(f, vacancyReconfirmed) {
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
+    // ▼調査用一時ログ（原因判明後に削除）：GASの実行数画面が開けない問題への回避策として、
+    // 「本日確認しました」使用時に費用・ケア体制が誤って「更新された」と判定される問題の
+    // 調査用に、GASからの生レスポンスをブラウザのコンソールに出す
+    console.log('[調査用] GASレスポンス全体:', data);
+    if (data && data.debugMismatches) {
+      console.log('[調査用] put比較の詳細一覧:', data.debugMismatches);
+    }
+    // ▲調査用一時ログここまで
     if (data && data.error) throw new Error(data.error);
     return true;
   } catch (e) {
