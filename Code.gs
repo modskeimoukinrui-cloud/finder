@@ -176,8 +176,10 @@ function updateFacilityDetail(payload, skipNotification) {
   // （SWが施設に確認の電話をして、結果として値は変わらなかった場合。edit画面の
   // 「本日確認しました」ボタンでON/OFFする vacancyReconfirmed フラグ）に
   // 空床確認日を今日（日本時間）で更新する。
-  // vacancyBecameAvailable：通知用。「空床なし／未確認」→「空床あり」への変化のみを拾う
-  // （あり→なし、なし→なしのままは非該当）。値が変わっていない再確認だけでは通知しない。
+  // vacancyBecameAvailable：通知用（空床発生の特別メッセージ）。「空床なし／未確認」→
+  // 「空床あり」への変化のみを拾う（あり→なし、なし→なしのままは非該当）。
+  // 値が変わっていない再確認（vacancyReconfirmed）は、この特別メッセージとは別に、
+  // buildNotificationMessage側で「空床状況（再確認）」として通知される。
   let vacancyBecameAvailable = false;
   if (payload.vacancy !== undefined) {
     const beforeVacancy = String(current[(findCol('空床状況') || 1) - 1] || '').trim();
@@ -228,6 +230,7 @@ function updateFacilityDetail(payload, skipNotification) {
       const msg = buildNotificationMessage('updateFacilityDetail', {
         facilityName: facilityName,
         vacancyBecameAvailable: vacancyBecameAvailable,
+        vacancyReconfirmed: !!payload.vacancyReconfirmed,
         costChanged: costChanged,
         careChanged: careChanged,
         updatedBy: payload.updatedBy,
@@ -356,6 +359,11 @@ function buildNotificationMessage(kind, data) {
       lines.push('🟢 ' + (data.facilityName || '施設') + ' に空床があります');
     }
     const others = [];
+    // 「本日確認しました」ボタンによる再確認（値は変わっていない）。
+    // 空床発生（vacancyBecameAvailable）とは別趣旨の通知なので、
+    // そちらが優先される場合はここには含めない（実運用上ほぼ同時に
+    // trueになることはない想定だが、念のため排他にしておく）。
+    if (data.vacancyReconfirmed && !data.vacancyBecameAvailable) others.push('空床状況（再確認）');
     if (data.costChanged) others.push('費用情報');
     if (data.careChanged) others.push('ケア体制');
     if (others.length > 0) {
