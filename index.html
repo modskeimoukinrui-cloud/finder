@@ -24858,6 +24858,11 @@ function openEditSheet(id) {
       }).join('')}
       <input type="hidden" id="edit-vacancy-hidden" value="${f.vacancy||''}">
     </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 0 10px;">
+      <button type="button" id="vacancy-recheck-btn" onclick="toggleVacancyRecheck()" style="display:flex;align-items:center;gap:5px;padding:6px 12px;font-size:12.5px;font-weight:600;font-family:'Noto Sans JP',sans-serif;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-primary);cursor:pointer;">🔄 本日確認しました</button>
+      <span style="font-size:11px;color:var(--text-secondary);">${(() => { const d = vacancyDaysSince(f.vacancyDate); return d !== null ? `（現在：${d}日前確認）` : '（現在：未確認）'; })()}</span>
+      <input type="hidden" id="edit-vacancy-reconfirmed" value="false">
+    </div>
     <div style="padding:0 0 10px;">
       <div class="field-label" style="margin-top:0;">空床メモ（任意）</div>
       <input type="text" class="field-input" id="edit-vacancyNote" value="${f.vacancyNote||''}" placeholder="例：○月頃に空き予定、○室空きあり" style="width:100%;margin-top:4px;">
@@ -25091,6 +25096,19 @@ function applyAiAnalysisToEditForm(result, f) {
   return nameMismatch;
 }
 
+// 「本日確認しました」ボタン：空床状況の値自体は変えずに「今日確認した」フラグをON/OFFする
+function toggleVacancyRecheck() {
+  const hidden = document.getElementById('edit-vacancy-reconfirmed');
+  const btn = document.getElementById('vacancy-recheck-btn');
+  if (!hidden || !btn) return;
+  const next = hidden.value !== 'true';
+  hidden.value = next ? 'true' : 'false';
+  btn.textContent = next ? '✅ 本日確認済みにします' : '🔄 本日確認しました';
+  btn.style.border = next ? '1.5px solid var(--accent)' : '1.5px solid var(--border)';
+  btn.style.background = next ? 'var(--accent-pale)' : 'var(--surface)';
+  btn.style.color = next ? 'var(--accent)' : 'var(--text-primary)';
+}
+
 async function saveEdit() {
   const f = FACILITIES.find(x => x.id === memoTargetId);
   if (!f) return;
@@ -25098,9 +25116,10 @@ async function saveEdit() {
   // 空床状況
   const vacancyVal = document.getElementById('edit-vacancy-hidden')?.value || '';
   const prevVacancy = f.vacancy || '';
+  const vacancyReconfirmed = document.getElementById('edit-vacancy-reconfirmed')?.value === 'true';
   f.vacancy = vacancyVal;
   f.vacancyNote = document.getElementById('edit-vacancyNote')?.value || '';
-  if (vacancyVal && vacancyVal !== prevVacancy) {
+  if ((vacancyVal && vacancyVal !== prevVacancy) || vacancyReconfirmed) {
     f.vacancyDate = todayString();
   }
 
@@ -25140,7 +25159,7 @@ async function saveEdit() {
 
   // GASへ保存（②施設詳細・ケア体制シートの該当行を更新する）
   const targetId = memoTargetId;
-  const saved = await updateFacilityDetailOnGAS(f);
+  const saved = await updateFacilityDetailOnGAS(f, vacancyReconfirmed);
   // 保存できたときだけ成功と伝える（失敗時は updateFacilityDetailOnGAS が警告を表示する）
   if (saved) showToast('✅ 施設情報を更新しました');
 
@@ -25155,7 +25174,7 @@ async function saveEdit() {
 // 「施設情報を更新」フォームの内容をGASへ送信する。
 // GASはCORSヘッダーを返すため mode:'no-cors' は使わない。
 // no-corsだと保存に失敗しても結果を読めず、成功したように見えてしまうため。
-async function updateFacilityDetailOnGAS(f) {
+async function updateFacilityDetailOnGAS(f, vacancyReconfirmed) {
   // ケア体制は②シートの実際の列名で送る（CARE_LABELSは表示用の略称なので実列名に読み替える）
   const care = {};
   Object.keys(CARE_LABELS).forEach(key => {
@@ -25173,6 +25192,7 @@ async function updateFacilityDetailOnGAS(f) {
         facilityId: f.id,
         vacancy: VACANCY_TO_SHEET[f.vacancy] || '',
         vacancyNote: f.vacancyNote || '',
+        vacancyReconfirmed: !!vacancyReconfirmed,
         nyukyoFee: f.nyukyoFee || '',
         costMin: f.costMin === null || f.costMin === undefined ? '' : f.costMin,
         costMax: f.costMax === null || f.costMax === undefined ? '' : f.costMax,

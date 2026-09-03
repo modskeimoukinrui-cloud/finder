@@ -172,15 +172,18 @@ function updateFacilityDetail(payload, skipNotification) {
   const numOrBlank = (v) => (v === '' || v === null || v === undefined) ? '' : Number(v);
 
   // --- 空床状況 ---
-  // 空床状況が「変化したときだけ」空床確認日を今日（日本時間）で更新する
+  // 空床状況が「変化したとき」、または「値は変えずに今日確認したことだけを記録したい」とき
+  // （SWが施設に確認の電話をして、結果として値は変わらなかった場合。edit画面の
+  // 「本日確認しました」ボタンでON/OFFする vacancyReconfirmed フラグ）に
+  // 空床確認日を今日（日本時間）で更新する。
   // vacancyBecameAvailable：通知用。「空床なし／未確認」→「空床あり」への変化のみを拾う
-  // （あり→なし、なし→なしのままは非該当）。
+  // （あり→なし、なし→なしのままは非該当）。値が変わっていない再確認だけでは通知しない。
   let vacancyBecameAvailable = false;
   if (payload.vacancy !== undefined) {
     const beforeVacancy = String(current[(findCol('空床状況') || 1) - 1] || '').trim();
     const afterVacancy = String(payload.vacancy || '').trim();
     put('空床状況', afterVacancy);
-    if (afterVacancy && afterVacancy !== beforeVacancy) {
+    if ((afterVacancy && afterVacancy !== beforeVacancy) || payload.vacancyReconfirmed) {
       put('空床確認日', todayInTokyo());
     }
     vacancyBecameAvailable = (afterVacancy === '空きあり' && beforeVacancy !== '空きあり');
