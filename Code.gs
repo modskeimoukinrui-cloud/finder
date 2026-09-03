@@ -155,37 +155,15 @@ function updateFacilityDetail(payload, skipNotification) {
   const current = values[rowNum - 1];
   const updated = [];
 
-  // ▼▼▼ 調査用一時変数（原因判明後に削除すること）：
-  // 「本日確認しました」使用時に費用・ケア体制が誤って「更新された」と判定される
-  // 問題の原因調査用。put()の比較結果（変化の有無を問わず）をここに蓄積し、
-  // レスポンスに含めてブラウザのコンソールで確認できるようにする。
-  const debugMismatches = [];
-  // ▲▲▲
-
   // 指定された列に値を書き込む（列が無ければ黙って飛ばす）。
   // 実際に値が変わったときだけ true を返す。
-  // alwaysDebugLog: 調査用一時引数（原因判明後に削除）。trueを渡すと、
-  // 変化なしと判定された場合もdebugMismatchesに記録する（費用・ケア体制の呼び出しでtrueを渡す）。
-  function put(colName, value, alwaysDebugLog) {
+  function put(colName, value) {
     const col = findCol(colName);
     if (!col) return false;
     const before = current[col - 1];
     const beforeStr = (before === null || before === undefined) ? '' : String(before).trim();
     const afterStr = (value === null || value === undefined) ? '' : String(value).trim();
-    const changed = beforeStr !== afterStr;
-    // ▼調査用一時ログ（原因判明後に削除）
-    if (changed || alwaysDebugLog) {
-      debugMismatches.push({
-        colName: colName,
-        changed: changed,
-        before: beforeStr,
-        after: afterStr,
-        beforeType: typeof before,
-        afterType: typeof value
-      });
-    }
-    // ▲調査用一時ログここまで
-    if (!changed) return false;
+    if (beforeStr === afterStr) return false;
     sheet.getRange(rowNum, col).setValue(value === null || value === undefined ? '' : value);
     updated.push(colName);
     return true;
@@ -216,28 +194,25 @@ function updateFacilityDetail(payload, skipNotification) {
 
   // --- 費用 ---
   // 入居時費用・月額下限・月額上限・費用特記のいずれかが変わったら費用更新日を記録する
-  // 調査用（原因判明後に削除）：費用まわりの4項目はalwaysDebugLog=trueを渡し、
-  // 変化なし判定でもdebugMismatchesに記録を残す
   let costChanged = false;
-  if (payload.nyukyoFee !== undefined) costChanged = put('入居時費用', payload.nyukyoFee || '', true) || costChanged;
-  if (payload.costMin !== undefined) costChanged = put('月額下限（円）', numOrBlank(payload.costMin), true) || costChanged;
-  if (payload.costMax !== undefined) costChanged = put('月額上限（円）', numOrBlank(payload.costMax), true) || costChanged;
-  if (payload.costNote !== undefined) costChanged = put('費用に関する信頼性・特記事項', payload.costNote || '', true) || costChanged;
+  if (payload.nyukyoFee !== undefined) costChanged = put('入居時費用', payload.nyukyoFee || '') || costChanged;
+  if (payload.costMin !== undefined) costChanged = put('月額下限（円）', numOrBlank(payload.costMin)) || costChanged;
+  if (payload.costMax !== undefined) costChanged = put('月額上限（円）', numOrBlank(payload.costMax)) || costChanged;
+  if (payload.costNote !== undefined) costChanged = put('費用に関する信頼性・特記事項', payload.costNote || '') || costChanged;
   if (costChanged) put('費用更新日', todayInTokyo());
 
   // --- ケア体制14項目 ---
   // 14項目のいずれかが変わったらケア体制更新日を記録する
-  // 調査用（原因判明後に削除）：ケア体制14項目もalwaysDebugLog=trueを渡す
   let careChanged = false;
   if (payload.care && typeof payload.care === 'object') {
     Object.keys(payload.care).forEach(label => {
-      if (put(label, payload.care[label] || '', true)) careChanged = true;
+      if (put(label, payload.care[label] || '')) careChanged = true;
     });
   }
   // 「その他」を選んだ項目がある場合に項目名と内容を書く共通の自由記述欄。
   // ケア体制の一部という扱いなので、変更検知もケア体制更新日に含める。
   if (payload.careOtherNote !== undefined) {
-    if (put('ケア体制その他メモ', payload.careOtherNote || '', true)) careChanged = true;
+    if (put('ケア体制その他メモ', payload.careOtherNote || '')) careChanged = true;
   }
   if (careChanged) put('ケア体制更新日', todayInTokyo());
 
@@ -269,9 +244,7 @@ function updateFacilityDetail(payload, skipNotification) {
   return {
     success: true, facilityId: facilityId, row: rowNum,
     costChanged: costChanged, careChanged: careChanged, updated: updated,
-    vacancyBecameAvailable: vacancyBecameAvailable,
-    // 調査用一時フィールド（原因判明後に削除）：put()の比較詳細一覧
-    debugMismatches: debugMismatches
+    vacancyBecameAvailable: vacancyBecameAvailable
   };
 }
 
